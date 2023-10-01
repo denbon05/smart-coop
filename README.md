@@ -1,7 +1,6 @@
-# House cooperative voting system
+# smart-coop
 
 This project can address real-world issues in housing cooperatives by promoting transparency and empowering members to make informed decisions about how their cooperative's funds are allocated.
-It's a practical and meaningful application of blockchain technology and smart contracts in a community context.
 
 ## Challenges with coops
 
