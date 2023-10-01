@@ -1,0 +1,12 @@
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Hardhat files
+cache
+artifacts
