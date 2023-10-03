@@ -1,8 +1,8 @@
-import { readonly, ref } from 'vue';
+import { readonly, computed } from 'vue';
+
+const eth = computed(() => window.ethereum);
 
 export const useUser = () => {
-  const eth = ref(window.ethereum);
-
   if (!eth.value) {
     return {};
   }

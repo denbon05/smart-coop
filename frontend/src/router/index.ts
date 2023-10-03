@@ -22,6 +22,11 @@ const router = createRouter({
       name: 'member',
       component: () => import('../views/MemberView.vue'),
     },
+    {
+      path: '/auth',
+      name: 'auth',
+      component: () => import('../views/AuthView.vue'),
+    },
   ],
 });
 

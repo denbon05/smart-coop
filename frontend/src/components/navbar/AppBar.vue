@@ -1,15 +1,31 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useUser } from '@/composables/user';
 import { connectToWallet } from '@/api/ethers';
+import { inject } from 'vue';
+import type { ShowSnackbar } from '@/types/components/common';
+import AppError from '@/errors/AppError';
 
+const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
+
+const router = useRouter();
+const route = useRoute();
 const user = useUser();
 console.log('user', user);
 
 const connectWallet = async () => {
   try {
-    await connectToWallet();
+    // await connectToWallet();
+    // TODO if user registered show main page
+    // else redirect to auth page
+    router.push({
+      name: 'auth',
+    });
   } catch (err) {
+    const msg =
+      err instanceof AppError ? err.message : 'Something went terribly wrong';
+    console.log('connectWallet', showSnackbar);
+    showSnackbar({ msg });
     console.error(err);
   }
 };
@@ -45,11 +61,11 @@ const connectWallet = async () => {
     <v-spacer></v-spacer>
 
     <template v-if="user.selectedAddress">
-      <RouterLink to="/member">
-        <v-btn plain color="white"> Member </v-btn>
-      </RouterLink>
       <RouterLink to="/coop">
         <v-btn plain color="white"> Coop </v-btn>
+      </RouterLink>
+      <RouterLink to="/member">
+        <v-btn plain color="white"> Account </v-btn>
       </RouterLink>
     </template>
     <v-btn v-else plain @click="connectWallet"> Connect </v-btn>

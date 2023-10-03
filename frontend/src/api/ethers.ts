@@ -1,8 +1,10 @@
+import AppError from '@/errors/AppError';
 import { ethers } from 'ethers';
 
 export const connectToWallet = async () => {
   if (!window.ethereum) {
-    throw Error(`
+    // handle exception above
+    throw new AppError(`
       Can't find Metamask installed.
       Only Metamask is currently supported.
     `);
