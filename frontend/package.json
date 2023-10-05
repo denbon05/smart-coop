@@ -12,8 +12,10 @@
     "format": "npx prettier --write src/"
   },
   "dependencies": {
+    "@mdi/font": "^7.2.96",
     "alchemy-sdk": "^2.10.1",
     "ethers": "^6.7.1",
+    "vee-validate": "^4.11.7",
     "vue": "^3.3.4",
     "vue-router": "^4.2.4",
     "vuetify": "^3.3.19"

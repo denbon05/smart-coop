@@ -1,30 +1,34 @@
 <script setup lang="ts">
-import { RouterLink, useRoute, useRouter } from 'vue-router';
-import { useUser } from '@/composables/user';
-import { connectToWallet } from '@/api/ethers';
-import { inject } from 'vue';
-import type { ShowSnackbar } from '@/types/components/common';
+import { connectToWallet, fetchAccountData } from '@/api/ethers';
+import { useAuth } from '@/composables/auth';
 import AppError from '@/errors/AppError';
+import type { ShowSnackbar } from '@/types/components/common';
+import { inject } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
 
 const router = useRouter();
 const route = useRoute();
-const user = useUser();
-console.log('user', user);
+const auth = useAuth();
+console.log('auth', auth);
 
 const connectWallet = async () => {
   try {
-    // await connectToWallet();
-    // TODO if user registered show main page
-    // else redirect to auth page
-    router.push({
-      name: 'auth',
-    });
+    const signer = await connectToWallet();
+    const account = await fetchAccountData(signer);
+    console.log('!!!!!!', account.exists);
+    if (account.exists) {
+      // show main page
+    } else {
+      // redirect to auth page
+      router.push({
+        name: 'auth',
+      });
+    }
   } catch (err) {
     const msg =
       err instanceof AppError ? err.message : 'Something went terribly wrong';
-    console.log('connectWallet', showSnackbar);
     showSnackbar({ msg });
     console.error(err);
   }
@@ -60,7 +64,7 @@ const connectWallet = async () => {
 
     <v-spacer></v-spacer>
 
-    <template v-if="user.selectedAddress">
+    <template v-if="auth.user.isLogged">
       <RouterLink to="/coop">
         <v-btn plain color="white"> Coop </v-btn>
       </RouterLink>

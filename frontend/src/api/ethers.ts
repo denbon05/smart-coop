@@ -1,5 +1,7 @@
+import { coopGovernorAddress } from '@/constants';
 import AppError from '@/errors/AppError';
-import { ethers } from 'ethers';
+import { abi as coopGovernorABI } from '@abi/CoopGovernor.sol/CoopGovernor.json';
+import { JsonRpcSigner, ethers } from 'ethers';
 
 export const connectToWallet = async () => {
   if (!window.ethereum) {
@@ -17,7 +19,21 @@ export const connectToWallet = async () => {
   // It also provides an opportunity to request access to write
   // operations, which will be performed by the private key
   // that MetaMask manages for the user.
-  const account = await provider.getSigner();
+  const signer = await provider.getSigner();
 
-  return account;
+  return signer;
+};
+
+export const fetchAccountData = async (signer: JsonRpcSigner) => {
+  if (!window.ethereum) {
+    throw new AppError('Connect wallet first');
+  }
+
+  const coopGovernor = new ethers.Contract(
+    coopGovernorAddress,
+    coopGovernorABI,
+    signer
+  );
+
+  return coopGovernor.getAccount(window.ethereum.selectedAddress);
 };

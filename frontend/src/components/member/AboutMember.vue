@@ -25,3 +25,4 @@ const user = useUser();
     </v-col></v-row
   >
 </template>
+@/composables/auth
