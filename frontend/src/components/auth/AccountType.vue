@@ -1,4 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { AccountType } from '@/types/entities/account';
+
+const emit = defineEmits<{
+  next: [accountType: AccountType];
+}>();
+</script>
 
 <template>
   <v-sheet
@@ -9,21 +15,48 @@
     max-width="800"
     width="100%"
   >
-    <v-btn
-      prepend-icon="mdi-account-check"
-      variant="outlined"
-      color="orange"
-      class="my-2"
-      size="large"
-      >Join existed cooperative</v-btn
-    >
-    <v-btn
-      prepend-icon="mdi-home-group"
-      variant="outlined"
-      color="orange"
-      class="my-2"
-      size="large"
-      >Register new cooperative</v-btn
-    >
+    <v-item-group selected-class="bg-primary" class="d-flex">
+      <!-- <v-item v-slot="{ selectedClass }">
+        <v-img
+          :src="`https://cdn.vuetifyjs.com/images/backgrounds/bg.jpg`"
+          cover
+          :class="['d-flex align-center mx-3 px-3', selectedClass]"
+          height="200"
+          @click="emit('next', AccountType.MEMBER)"
+        >
+          <div class="text-h5 flex-grow-1 text-center">
+            Join existed cooperative
+          </div>
+        </v-img>
+      </v-item> -->
+
+      <v-item v-slot="{ selectedClass }">
+        <v-card
+          :class="['d-flex align-center mx-3', selectedClass]"
+          height="200"
+          @click="emit('next', AccountType.MEMBER)"
+          variant="outlined"
+          color="secondary-darken-1"
+        >
+          <div class="text-h4 flex-grow-1 text-center">
+            Join existed cooperative
+          </div>
+        </v-card>
+      </v-item>
+
+      <v-item v-slot="{ selectedClass }">
+        <v-card
+          :class="['d-flex align-center mx-3', selectedClass]"
+          height="200"
+          @click="emit('next', AccountType.COOP)"
+          variant="outlined"
+          color="secondary-darken-1"
+        >
+          <div class="text-h4 flex-grow-1 text-center">
+            Register new cooperative
+          </div>
+        </v-card>
+      </v-item>
+    </v-item-group>
   </v-sheet>
 </template>
