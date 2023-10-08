@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useUser } from '@/composables/user';
+import { useAuth } from '@/composables/auth';
 
-const user = useUser();
+const auth = useAuth();
 </script>
 
 <template>
@@ -13,7 +13,7 @@ const user = useUser();
             <div class="text-overline mb-1">tonal</div>
             <div class="text-h6 mb-1">Headline</div>
             <div class="text-caption">
-              {{ user.selectedAddress }}
+              {{ auth.selectedAddress }}
             </div>
           </div>
         </v-card-item>
@@ -25,4 +25,3 @@ const user = useUser();
     </v-col></v-row
   >
 </template>
-@/composables/auth

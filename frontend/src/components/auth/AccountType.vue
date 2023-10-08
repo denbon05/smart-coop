@@ -16,20 +16,7 @@ const emit = defineEmits<{
     width="100%"
   >
     <v-item-group selected-class="bg-primary" class="d-flex">
-      <!-- <v-item v-slot="{ selectedClass }">
-        <v-img
-          :src="`https://cdn.vuetifyjs.com/images/backgrounds/bg.jpg`"
-          cover
-          :class="['d-flex align-center mx-3 px-3', selectedClass]"
-          height="200"
-          @click="emit('next', AccountType.MEMBER)"
-        >
-          <div class="text-h5 flex-grow-1 text-center">
-            Join existed cooperative
-          </div>
-        </v-img>
-      </v-item> -->
-
+      <!-- TODO add associative background -->
       <v-item v-slot="{ selectedClass }">
         <v-card
           :class="['d-flex align-center mx-3', selectedClass]"

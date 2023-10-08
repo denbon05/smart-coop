@@ -16,6 +16,18 @@ const router = createRouter({
       path: '/coop',
       name: 'coop',
       component: () => import('../views/CoopView.vue'),
+      children: [
+        {
+          name: 'new-proposal',
+          path: 'new-proposal',
+          component: () => import('@/components/coop/NewProposal.vue'),
+        },
+        {
+          name: 'proposals',
+          path: 'proposals',
+          component: () => import('@/components/coop/ProposalList.vue'),
+        },
+      ],
     },
     {
       path: '/member',

@@ -4,13 +4,21 @@ import {
   type AccountData as MemberDataType,
 } from '@/types/entities/account';
 import { Account } from '@/utils/auth';
-import { computed, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 import AccountData from './AccountData.vue';
 import AccountPreview from './AccountPreview.vue';
 import AccountType from './AccountType.vue';
+import type { ShowSnackbar } from '@/types/components/common';
+import AppError from '@/errors/AppError';
+import { createAccount, fetchAccountData } from '@/api/eth-governor';
+import { useRouter } from 'vue-router';
+import { useAuth } from '@/composables/auth';
 
 // instantiate the account to fullfil
 const account = new Account();
+const auth = useAuth();
+
+const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
 
 const stepIdx = ref(0);
 // Indexes are relevant to the steps bellow
@@ -52,10 +60,23 @@ const setAccountData = (memberData: MemberDataType) => {
   stepIdx.value += 1;
 };
 
-const signUp = () => {
-  // TODO
-  console.log('VALIDATE', account.parse());
-  alert(JSON.stringify(account, null, 2));
+const router = useRouter();
+
+const signUp = async () => {
+  try {
+    const accountData = account.parse();
+    await createAccount(accountData);
+    const governorAccount = await fetchAccountData();
+    auth.setAccount(governorAccount);
+    router.push({
+      name: 'home',
+    });
+  } catch (err) {
+    showSnackbar({
+      msg: err instanceof AppError ? err.message : 'Unable to sign up',
+    });
+    console.error(err);
+  }
 };
 </script>
 

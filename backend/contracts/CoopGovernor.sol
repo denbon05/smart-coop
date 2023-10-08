@@ -10,15 +10,21 @@ pragma solidity ^0.8.19;
 import "hardhat/console.sol";
 
 contract CoopGovernor {
-    struct Account {
-        bool exists;
-        uint id;
-        string name;
-        string location;
-        // TODO rest of the neede data
+    enum AccountType {
+        COOP,
+        MEMBER
     }
 
-    mapping (address => Account) accounts;
+    struct Account {
+        bool exists;
+        string name;
+        string location;
+        string email;
+        AccountType accountType;
+        // TODO rest of the needed data
+    }
+
+    mapping(address => Account) accounts;
 
     // only member himself can add an account
     function addAccount(Account memory _account) external {
@@ -26,7 +32,9 @@ contract CoopGovernor {
     }
 
     // fetch account
-    function getAccount(address _accountAddress) external view returns(Account memory) {
+    function getAccount(
+        address _accountAddress
+    ) external view returns (Account memory) {
         return accounts[_accountAddress];
     }
 }

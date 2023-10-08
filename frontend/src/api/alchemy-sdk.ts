@@ -5,4 +5,4 @@ const settings: AlchemySettings = {
   network: Network.ETH_GOERLI,
 };
 
-const alchemy = new Alchemy(settings);
+export default new Alchemy(settings);

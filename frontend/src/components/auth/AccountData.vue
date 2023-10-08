@@ -23,6 +23,12 @@ const { handleSubmit } = useForm({
 
       return 'Must be a valid e-mail.';
     },
+    // TODO select coop in case join to existing coop
+    // select (value: string) {
+    //     if (value) return true
+
+    //     return 'Select an item.'
+    //   },
   },
 });
 

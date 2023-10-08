@@ -13,7 +13,7 @@ const advantages: IAdvantage[] = [
   <v-container fluid>
     <v-row dense justify="center">
       <v-col cols="12" md="10" lg="9">
-        <v-card>
+        <v-card elevation="3">
           <v-card-title>
             Have direct influence on your local coop
           </v-card-title>

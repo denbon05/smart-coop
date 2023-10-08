@@ -1,0 +1,34 @@
+---
+- name: Deploy backend
+  hosts: localhost
+
+  tasks:
+    - name: Ensure blockcain is available
+      ansible.builtin.wait_for:
+        host: localhost
+        port: 8545
+        state: started
+        delay: 0
+        timeout: 1
+      register: blockchain
+
+    - name: Deploy contracts
+      ansible.builtin.command:
+        chdir: ../backend
+        cmd: npx hardhat run scripts/deploy.ts
+      register: deploy
+      changed_when: blockchain.state == 'started'
+
+    - name: Extract contract address from stdout
+      ansible.builtin.set_fact:
+        contract_address: "{{ deploy.stdout | regex_search('0x\\w+') }}"
+
+    - name: Log contract address
+      ansible.builtin.debug:
+        var: contract_address
+
+    - name: Put contract address to the client
+      ansible.builtin.replace:
+        path: ../frontend/src/constants/index.ts
+        regexp: "const coopGovernorAddress.*"
+        replace: "const coopGovernorAddress = '{{ contract_address }}';"

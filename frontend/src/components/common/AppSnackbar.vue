@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, defineExpose } from 'vue';
+import { reactive } from 'vue';
 import type {
   SnackbarParm,
   ShowSnackbar,

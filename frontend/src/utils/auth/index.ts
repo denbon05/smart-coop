@@ -1,5 +1,8 @@
-import { AccountType, type AccountData } from '@/types/entities/account';
-import { accountSchema } from './schema-validator';
+import {
+  AccountType,
+  type AccountData,
+  type GovernorAccount,
+} from '@/types/entities/account';
 
 export class Account {
   accountType?: AccountType;
@@ -17,5 +20,9 @@ export class Account {
     this.memberData = data;
   };
 
-  parse = () => accountSchema.parse(this);
+  parse = (): GovernorAccount =>
+    ({
+      accountType: this.accountType,
+      ...this.memberData,
+    }) as GovernorAccount;
 }

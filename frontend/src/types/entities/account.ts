@@ -1,12 +1,15 @@
-import type { ZodString } from 'zod';
-
 export enum AccountType {
   COOP,
   MEMBER,
 }
 
 export type AccountData = {
-  name: ZodString;
-  location: ZodString;
-  email: ZodString;
+  name: string;
+  location: string;
+  email: string;
 };
+
+export type GovernorAccount = {
+  accountType: AccountType;
+  exists?: boolean;
+} & AccountData;

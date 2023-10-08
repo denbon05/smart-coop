@@ -1,31 +1,30 @@
-import { computed, readonly, toValue } from 'vue';
-
-interface UserStored {
-  isLogged?: boolean;
-}
+import type { GovernorAccount } from '@/types/entities/account';
+import { computed, reactive, readonly, toValue } from 'vue';
 
 // global state
 const eth = computed(() => window.ethereum);
-const user = computed<UserStored>({
-  get() {
-    return JSON.parse(localStorage.getItem('user') ?? '{}');
-  },
-  set(user: UserStored) {
-    return localStorage.setItem('user', JSON.stringify(user));
-  },
-});
+const account = reactive<Partial<GovernorAccount>>({});
 
-const setUser = (userData: UserStored) => {
-  user.value = userData;
+const setAccount = ({
+  accountType,
+  email,
+  location,
+  name,
+  exists = false,
+}: GovernorAccount) => {
+  // the values are Proxy object, can't use Object.assign for reactive behavior
+  account.accountType = accountType;
+  account.email = email;
+  account.exists = exists;
+  account.location = location;
+  account.name = name;
 };
 
 export const useAuth = () => {
   if (!eth.value) {
-    // default values
+    // no ethereum in window
     return {
-      user: {
-        isLogged: false,
-      } as UserStored,
+      setAccount,
     };
   }
 
@@ -33,7 +32,7 @@ export const useAuth = () => {
 
   return {
     selectedAddress,
-    user: toValue(user),
-    setUser,
+    account: toValue(account),
+    setAccount,
   };
 };

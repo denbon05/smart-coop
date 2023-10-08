@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import { connectToWallet, fetchAccountData } from '@/api/ethers';
+import { fetchAccountData } from '@/api/eth-governor';
+import { connectToWallet } from '@/api/eth-wallet';
 import { useAuth } from '@/composables/auth';
 import AppError from '@/errors/AppError';
 import type { ShowSnackbar } from '@/types/components/common';
 import { inject } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 
 const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
 
+const props = defineProps<{
+  isAccountFetching: boolean;
+}>();
+
 const router = useRouter();
-const route = useRoute();
 const auth = useAuth();
-console.log('auth', auth);
 
 const connectWallet = async () => {
   try {
-    const signer = await connectToWallet();
-    const account = await fetchAccountData(signer);
-    console.log('!!!!!!', account.exists);
+    await connectToWallet();
+    const account = await fetchAccountData();
     if (account.exists) {
       // show main page
+      router.push({
+        name: 'home',
+      });
     } else {
       // redirect to auth page
       router.push({
@@ -64,14 +69,17 @@ const connectWallet = async () => {
 
     <v-spacer></v-spacer>
 
-    <template v-if="auth.user.isLogged">
-      <RouterLink to="/coop">
-        <v-btn plain color="white"> Coop </v-btn>
-      </RouterLink>
-      <RouterLink to="/member">
-        <v-btn plain color="white"> Account </v-btn>
-      </RouterLink>
+    <template v-if="!props.isAccountFetching">
+      <!-- show buttons after account fetched if there is one -->
+      <template v-if="auth.account?.exists">
+        <RouterLink to="/coop">
+          <v-btn variant="outlined" color="white" class="mx-2"> Coop </v-btn>
+        </RouterLink>
+        <RouterLink to="/member">
+          <v-btn variant="outlined" color="white" class="mx-2"> Account </v-btn>
+        </RouterLink>
+      </template>
+      <v-btn v-else plain @click="connectWallet"> Connect </v-btn>
     </template>
-    <v-btn v-else plain @click="connectWallet"> Connect </v-btn>
   </v-app-bar>
 </template>
