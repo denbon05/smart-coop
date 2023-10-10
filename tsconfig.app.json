@@ -1,0 +1,25 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": [
+    "src/types/global/env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "src/artifacts/**/*.json"
+  ],
+  "exclude": [
+    "__tests__/**/*"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@abi/*": [
+        "./src/artifacts/contracts/*"
+      ]
+    }
+  }
+}

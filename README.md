@@ -19,3 +19,21 @@ This project can address real-world issues in housing cooperatives by promoting 
 4. Develop voting Smart Contract where cooperatives can cast votes on proposals;
 5. Define a priority of a proposal;
 6. Transparency dashboard;
+
+## Dev-mode
+
+### Local
+
+<b>Prerequisites</b>
+
+1. Local Ethereum blockchain should be launched;
+2. MetaMask must be configured to connect to a local blockchain;
+
+```sh
+make start
+```
+
+## Concept
+
+1. ERC20 token account weight for voting;
+2. ETH is an actual currency to pay external services;

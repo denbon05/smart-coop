@@ -1,2 +1,9 @@
-deploy-backend:
-	cd ./ansible && ansible-playbook deploy-backend.yml
+test:
+	npm run test:unit
+
+fix:
+	npm run lint-fix
+	npm run format
+
+start:
+	npm run dev

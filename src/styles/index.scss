@@ -1,0 +1,14 @@
+@font-face {
+  font-family: 'Jeju Hallasan';
+  src: url('@/assets/fonts/JejuHallasan-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'PlusJakartaSans';
+  src: url('@/assets/fonts/PlusJakartaSans-VariableFont_wght.ttf');
+}
+
+:root {
+  font-family: 'PlusJakartaSans';
+  font-weight: 400;
+}

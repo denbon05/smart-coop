@@ -1,0 +1,11 @@
+.btn-sunset {
+  height: 100%;
+  background-color: #af932d; /* For browsers that do not support gradients */
+  background-image: linear-gradient(#fbc400, #af932d, #56460d);
+}
+
+.btn-big {
+  display: flex;
+  padding: 27px;
+  border-radius: 14px !important;
+}
