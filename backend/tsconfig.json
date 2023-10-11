@@ -8,7 +8,7 @@
     "resolveJsonModule": true
   },
   "include": [
-    "./__tests__/contracts",
+    "./__tests__",
     "./typechain-types"
   ],
   "files": [

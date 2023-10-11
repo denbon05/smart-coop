@@ -12,17 +12,22 @@ const router = createRouter({
         {
           name: 'new-proposal',
           path: 'new-proposal',
-          component: () => import('@/components/home/NewProposal.vue'),
+          component: () => import('@/components/coop/NewProposal.vue'),
         },
         {
           name: 'proposals',
           path: 'proposals',
-          component: () => import('@/components/home/ProposalList.vue'),
+          component: () => import('@/components/coop/ProposalList.vue'),
         },
+        // {
+        //   name: 'coop-discover',
+        //   path: 'discover',
+        //   component: () => import('@/components/coop/DiscoverCoop.vue'),
+        // },
         {
-          name: 'coop-discover',
-          path: 'discover',
-          component: () => import('@/components/home/DiscoverCoop.vue'),
+          name: 'proposal-history',
+          path: 'proposal-history',
+          component: () => import('@/components/coop/ProposalList.vue'),
         },
       ],
     },

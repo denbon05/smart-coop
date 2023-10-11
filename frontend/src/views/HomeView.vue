@@ -42,7 +42,7 @@ const sections = [
         >
         <v-row justify="center">
           <v-col cols="11" md="5">
-            <CoopSection link="/discover"> Voting history </CoopSection>
+            <CoopSection link="/proposal-history"> Voting history </CoopSection>
           </v-col>
 
           <v-col cols="11" md="5">
@@ -52,7 +52,7 @@ const sections = [
       </v-container>
     </v-item-group>
 
-    <v-container
+    <v-container v-else
       ><v-row
         ><v-col>
           <v-list class="d-flex">

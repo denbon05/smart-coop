@@ -50,8 +50,13 @@ contract CoopGovernor is
     // TODO prevent from free connection (add ESCROW? members will accept newbies?)
     function join() public {
         address tokenAddress = address(GovernorVotes.token());
-        console.log("tokenAddress", tokenAddress);
         CoopToken(tokenAddress).safeMint(msg.sender);
+    }
+
+    // ? the main idea is to hire external services
+    function hireService(address payable _target, uint _price) external payable {
+        bool success = _target.send(_price);
+        require(success, "Failed to send ether");
     }
 
     // The following functions are overrides required by Solidity.

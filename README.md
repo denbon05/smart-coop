@@ -28,12 +28,3 @@ This project can address real-world issues in housing cooperatives by promoting 
 
 1. Local Ethereum blockchain should be launched;
 2. MetaMask must be configured to connect to a local blockchain;
-
-```sh
-make start
-```
-
-## Concept
-
-1. ERC20 token account weight for voting;
-2. ETH is an actual currency to pay external services;
