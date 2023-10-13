@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/governance/Governor.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorStorage.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "./CoopToken.sol";
@@ -12,45 +12,34 @@ import "hardhat/console.sol";
 
 contract CoopGovernor is
     Governor,
+    GovernorSettings,
     GovernorCountingSimple,
-    GovernorStorage,
     GovernorVotes,
     GovernorVotesQuorumFraction
 {
-    // // ? for study purposes. The data details cheaper store on backend.
-    // struct Member {
-    //     string name;
-    //     string location;
-    //     string email;
-    //     bool isMember;
-    // }
+    address private tokenAddress;
 
-    // // keep track of members
-    // mapping (address => bool) memebers;
-
+    // Ethereum doesn't have a fixed block time,
+    // but on average, it's approximately 13-15 seconds per block
     constructor(IVotes _token)
         Governor("CoopGovernor")
+        GovernorSettings(1 /* 1 block */, 40320 /* 1 week */, 1e18)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
-    {}
-
-    function votingDelay() public pure override returns (uint256) {
-        return 7200; // 1 day
+    {
+        tokenAddress = address(_token);
     }
 
-    function votingPeriod() public pure override returns (uint256) {
-        return 201600; // 4 weeks
-    }
-
-    function proposalThreshold() public pure override returns (uint256) {
-        return 2;
+    receive() external payable override {
+        require(_executor() == address(this), "Governor: must send to executor");
+        // mint vote power after bill payed
+        CoopToken(tokenAddress).mint(msg.sender, 1e18);
     }
 
     // ? for now anyone can join to any coop
     // TODO prevent from free connection (add ESCROW? members will accept newbies?)
     function join() public {
-        address tokenAddress = address(GovernorVotes.token());
-        CoopToken(tokenAddress).safeMint(msg.sender);
+        CoopToken(tokenAddress).mint(msg.sender, 1e18);
     }
 
     // ? the main idea is to hire external services
@@ -61,33 +50,39 @@ contract CoopGovernor is
 
     // The following functions are overrides required by Solidity.
 
+    function votingDelay()
+        public
+        view
+        override(IGovernor, GovernorSettings)
+        returns (uint256)
+    {
+        return super.votingDelay();
+    }
+
+    function votingPeriod()
+        public
+        view
+        override(IGovernor, GovernorSettings)
+        returns (uint256)
+    {
+        return super.votingPeriod();
+    }
+
     function quorum(uint256 blockNumber)
         public
         view
-        override(Governor, GovernorVotesQuorumFraction)
+        override(IGovernor, GovernorVotesQuorumFraction)
         returns (uint256)
     {
         return super.quorum(blockNumber);
     }
 
-    function _propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description,
-        address proposer
-    )
-        internal
-        override(Governor, GovernorStorage)
+    function proposalThreshold()
+        public
+        view
+        override(Governor, GovernorSettings)
         returns (uint256)
     {
-        return super._propose(targets, values, calldatas, description, proposer);
-    }
-
-    // override clock behavior
-    // Error: Transaction reverted: function returned an unexpected amount of data at
-    //  @openzeppelin/contracts/governance/extensions/GovernorVotes.sol:35
-    function clock() public view override(Governor, GovernorVotes) returns (uint48) {
-        return Time.blockNumber();
+        return super.proposalThreshold();
     }
 }

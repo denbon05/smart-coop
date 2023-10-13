@@ -1,13 +1,14 @@
 import {
-  // time,
+  time,
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
+import { VoteKeys } from "./types/governor";
 
 describe("CoopGovernor", function () {
   const deploy = async () => {
-    const [s1, s2, s3, s4, s5] = await ethers.getSigners();
+    const [s1, s2, s3, s4] = await ethers.getSigners();
     const Governor = await ethers.getContractFactory("CoopGovernor");
     const Token = await ethers.getContractFactory("CoopToken");
     const nonce = await s1.getNonce();
@@ -20,7 +21,7 @@ describe("CoopGovernor", function () {
     const coopGovernor = await Governor.deploy(futureTokenAddress);
     const coopToken = await Token.deploy(coopGovernor.target);
 
-    return { s1, s2, s3, s4, s5, coopGovernor, coopToken };
+    return { s1, s2, s3, s4, coopGovernor, coopToken };
   };
 
   it("Deployer has to have voting power", async () => {
@@ -40,16 +41,20 @@ describe("CoopGovernor", function () {
     const ethAmount = 0.01;
     const amountDue = ethers.parseEther(ethAmount.toString());
 
-    beforeEach(async () => {
-      const { s2, s3, s4, coopGovernor } = await loadFixture(deploy);
+    const joinToCoop = async () => {
+      const { s1, s2, s3, s4, coopGovernor, coopToken } = await loadFixture(
+        deploy,
+      );
       // add some members
       await Promise.all(
         [s2, s3, s4].map((signer) => coopGovernor.connect(signer).join()),
       );
-    });
+
+      return { s1, s2, s3, s4, coopGovernor, coopToken };
+    };
 
     it("Members should be able to pay their bills", async () => {
-      const { s1, s2, s3, coopGovernor } = await loadFixture(deploy);
+      const { s1, s2, s3, coopGovernor } = await loadFixture(joinToCoop);
       const members = [s1, s2, s3];
       // pay bills
       await Promise.all(
@@ -72,30 +77,92 @@ describe("CoopGovernor", function () {
     });
 
     describe("With ETH on balance", () => {
-      beforeEach(async () => {
-        const governorETHBalance = ethers.parseEther("5");
-        const { s1, coopGovernor } = await loadFixture(deploy);
-        // top up the Governor contract balance
-        await s1.sendTransaction({
-          to: coopGovernor.target,
-          value: governorETHBalance,
-        });
-      });
+      const payBills = async () => {
+        const { s1, s2, s3, s4, coopGovernor, coopToken } = await loadFixture(
+          joinToCoop,
+        );
+
+        // members pay their bills
+        await Promise.all(
+          [s1, s1, s2, s3, s4].map((s) =>
+            s.sendTransaction({
+              to: coopGovernor.target,
+              value: amountDue,
+            }),
+          ),
+        );
+
+        return { s1, s2, s3, s4, coopGovernor, coopToken };
+      };
 
       it("Member should be able to make a proposal", async () => {
-        const { s2, coopGovernor, coopToken } = await loadFixture(deploy);
+        const { s1, s2, coopGovernor, coopToken } = await loadFixture(payBills);
         const amountETHForService = ethers.parseEther("1.0");
         const calldata = coopGovernor.interface.encodeFunctionData(
           "hireService",
           [s2.address, amountETHForService],
         );
-        // TODO fix GovernorInsufficientProposerVotes
-        await coopGovernor.propose(
-          [coopGovernor.target],
-          [0],
-          [calldata],
-          "Pay for service",
-        );
+
+        // delegate member voting power to himself
+        await coopToken.delegate(s1.address);
+
+        await expect(
+          coopGovernor.propose(
+            [coopGovernor.target],
+            [0],
+            [calldata],
+            "Pay for service",
+          ),
+        ).to.emit(coopGovernor, "ProposalCreated");
+      });
+
+      describe("Cast vote", () => {
+        let calldata: string;
+
+        const propose = async () => {
+          const { s1, s2, s3, s4, coopGovernor, coopToken } = await loadFixture(
+            payBills,
+          );
+
+          const amountETHForService = ethers.parseEther("1.0");
+          calldata = coopGovernor.interface.encodeFunctionData("hireService", [
+            s2.address,
+            amountETHForService,
+          ]);
+
+          // delegate member voting power to himself
+          await coopToken.delegate(s1.address);
+
+          const tx = await coopGovernor.propose(
+            [coopGovernor.target],
+            [0],
+            [calldata],
+            "Pay for service",
+          );
+
+          const receipt = await tx.wait();
+          // @ts-ignore
+          const [
+            {
+              args: { proposalId: proposalIdBigint },
+            },
+          ] = receipt?.logs;
+          const proposalId: string = proposalIdBigint.toString();
+
+          return { s1, s2, s3, s4, coopGovernor, coopToken, proposalId };
+        };
+
+        it("Members should be able to cast votes", async () => {
+          const { s3, coopGovernor, proposalId } = await loadFixture(propose);
+
+          const votingDelay = Number(await coopGovernor.votingDelay());
+          await time.increase(votingDelay * 2);
+          // can cast vote after time passed
+
+          await expect(
+            coopGovernor.connect(s3).castVote(proposalId, VoteKeys.FOR),
+          ).to.emit(coopGovernor, "VoteCast");
+        });
       });
     });
   });

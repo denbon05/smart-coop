@@ -1,42 +1,46 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Votes.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-contract CoopToken is ERC721, Ownable, EIP712, ERC721Votes {
-    uint256 private _nextTokenId;
+import "hardhat/console.sol";
 
-    constructor(address initialOwner)
-        ERC721("CoopToken", "COOP")
-        Ownable(initialOwner)
-        EIP712("CoopToken", "1")
-    {
-        // give the deployer voting power
-        _safeMint(msg.sender, _nextTokenId++);
+
+contract CoopToken is ERC20, ERC20Permit, ERC20Votes {
+    address governor;
+
+    constructor(address _governor) ERC20("CoopToken", "MTK") ERC20Permit("COOP") {
+        governor = _governor;
+        _mint(msg.sender, 1e18);
     }
 
-    function safeMint(address to) public onlyOwner {
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
+    function mint(address to, uint256 amount) external {
+        require(governor == msg.sender);
+        _mint(to, amount);
     }
 
-    // The following functions are overrides required by Solidity.
+    // The functions below are overrides required by Solidity.
 
-    function _update(address to, uint256 tokenId, address auth)
+    function _afterTokenTransfer(address from, address to, uint256 amount)
         internal
-        override(ERC721, ERC721Votes)
-        returns (address)
+        override(ERC20, ERC20Votes)
     {
-        return super._update(to, tokenId, auth);
+        super._afterTokenTransfer(from, to, amount);
     }
 
-    function _increaseBalance(address account, uint128 value)
+    function _mint(address to, uint256 amount)
         internal
-        override(ERC721, ERC721Votes)
+        override(ERC20, ERC20Votes)
     {
-        super._increaseBalance(account, value);
+        super._mint(to, amount);
+    }
+
+    function _burn(address account, uint256 amount)
+        internal
+        override(ERC20, ERC20Votes)
+    {
+        super._burn(account, amount);
     }
 }
