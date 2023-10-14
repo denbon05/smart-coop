@@ -1,10 +1,12 @@
 import {
   time,
   loadFixture,
+  mineUpTo,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import { VoteKeys } from "./types/governor";
+import { finishElectionPeriod } from "./helpers";
 
 describe("CoopGovernor", function () {
   const deploy = async () => {
@@ -38,7 +40,7 @@ describe("CoopGovernor", function () {
   });
 
   describe("With members", () => {
-    const ethAmount = 0.01;
+    const ethAmount = 0.5;
     const amountDue = ethers.parseEther(ethAmount.toString());
 
     const joinToCoop = async () => {
@@ -77,6 +79,8 @@ describe("CoopGovernor", function () {
     });
 
     describe("With ETH on balance", () => {
+      let calldata: string;
+
       const payBills = async () => {
         const { s1, s2, s3, s4, coopGovernor, coopToken } = await loadFixture(
           joinToCoop,
@@ -98,10 +102,10 @@ describe("CoopGovernor", function () {
       it("Member should be able to make a proposal", async () => {
         const { s1, s2, coopGovernor, coopToken } = await loadFixture(payBills);
         const amountETHForService = ethers.parseEther("1.0");
-        const calldata = coopGovernor.interface.encodeFunctionData(
-          "hireService",
-          [s2.address, amountETHForService],
-        );
+        calldata = coopGovernor.interface.encodeFunctionData("hireService", [
+          s2.address,
+          amountETHForService,
+        ]);
 
         // delegate member voting power to himself
         await coopToken.delegate(s1.address);
@@ -117,14 +121,14 @@ describe("CoopGovernor", function () {
       });
 
       describe("Cast vote", () => {
-        let calldata: string;
+        const serviceCost = 1.0;
+        const amountETHForService = ethers.parseEther(serviceCost.toString());
 
         const propose = async () => {
           const { s1, s2, s3, s4, coopGovernor, coopToken } = await loadFixture(
             payBills,
           );
 
-          const amountETHForService = ethers.parseEther("1.0");
           calldata = coopGovernor.interface.encodeFunctionData("hireService", [
             s2.address,
             amountETHForService,
@@ -162,6 +166,74 @@ describe("CoopGovernor", function () {
           await expect(
             coopGovernor.connect(s3).castVote(proposalId, VoteKeys.FOR),
           ).to.emit(coopGovernor, "VoteCast");
+        });
+
+        it("Members should not be able to cast votes after election", async () => {
+          const { s3, coopGovernor, proposalId } = await loadFixture(propose);
+
+          const proposalDeadline = Number(
+            await coopGovernor.proposalDeadline(proposalId),
+          );
+          await finishElectionPeriod(proposalDeadline);
+          // can cast vote after time passed
+
+          await expect(
+            coopGovernor.connect(s3).castVote(proposalId, VoteKeys.FOR),
+          ).to.reverted;
+        });
+
+        describe("Votes casted", () => {
+          const castVotes = async () => {
+            const { s1, s2, s3, s4, coopGovernor, coopToken, proposalId } =
+              await loadFixture(propose);
+
+            const votingPeriod = Number(await coopGovernor.votingPeriod());
+            await time.increase(votingPeriod);
+
+            await Promise.all(
+              [s1, s4, s3].map((s) =>
+                coopGovernor.connect(s).castVote(proposalId, VoteKeys.FOR),
+              ),
+            );
+
+            return { s1, s2, s3, s4, coopGovernor, coopToken, proposalId };
+          };
+
+          it("Should be able to execute the propose", async () => {
+            const {
+              s2: service,
+              coopGovernor,
+              proposalId,
+            } = await loadFixture(castVotes);
+
+            const proposalDeadline = await coopGovernor.proposalDeadline(
+              proposalId,
+            );
+            await finishElectionPeriod(Number(proposalDeadline));
+
+            const serviceBalanceBefore = Number(
+              ethers.formatEther(
+                await ethers.provider.getBalance(service.address),
+              ),
+            );
+
+            await expect(
+              coopGovernor.execute(
+                [coopGovernor.target],
+                [0],
+                [calldata],
+                ethers.keccak256(ethers.toUtf8Bytes("Pay for service")),
+              ),
+            ).to.emit(coopGovernor, "ProposalExecuted");
+
+            const serviceBalanceAfter = Number(
+              ethers.formatEther(
+                await ethers.provider.getBalance(service.address),
+              ),
+            );
+
+            expect(serviceBalanceBefore + serviceCost).eq(serviceBalanceAfter);
+          });
         });
       });
     });

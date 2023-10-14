@@ -23,7 +23,7 @@ contract CoopGovernor is
     // but on average, it's approximately 13-15 seconds per block
     constructor(IVotes _token)
         Governor("CoopGovernor")
-        GovernorSettings(1 /* 1 block */, 40320 /* 1 week */, 1e18)
+        GovernorSettings(1 /* 1 block */, 50 /* 10 minutes */, 1e18)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
     {

@@ -1,13 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import WelcomeView from '../views/WelcomeView.vue';
+import NotFound from '../views/NotFound.vue';
+import { isMember, isGuest } from './permissions';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // will match everything and put it under `$route.params.pathMatch`
+    { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
+    {
+      path: '/',
+      name: 'welcome',
+      component: WelcomeView,
+      beforeEnter: [isGuest],
+    },
     {
       path: '/',
       name: 'home',
       component: HomeView,
+      beforeEnter: [isMember],
       children: [
         {
           name: 'new-proposal',
@@ -38,6 +50,7 @@ const router = createRouter({
       path: '/member',
       name: 'member',
       component: () => import('../views/MemberView.vue'),
+      beforeEnter: [isMember],
     },
     {
       path: '/auth',

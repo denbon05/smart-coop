@@ -76,7 +76,7 @@ const connectWallet = async () => {
 
     <template v-if="!props.isAccountFetching">
       <!-- show buttons after account fetched if there is one -->
-      <template v-if="auth.account?.exists">
+      <template v-if="auth.account?.isMember">
         <RouterLink to="/member">
           <v-btn variant="outlined" color="white" class="mx-2"> Account </v-btn>
         </RouterLink>
