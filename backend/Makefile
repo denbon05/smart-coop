@@ -1,8 +1,5 @@
-test:
-	npm run test
-
 start:
-	npm run node
+	npm start
 
-compile:
-	npx hardhat compile
+migrate:
+	npm run migrate

@@ -1,9 +1,13 @@
-test:
-	npm run test:unit
+setup:
+	cd backend && npm i
+	cd blockchain && npm i
+	cd frontend && npm i
 
-fix:
-	npm run lint-fix
-	npm run format
+up:
+	docker compose --env-file .env.dev up
 
-start:
-	npm run dev
+up-d:
+	docker compose --env-file .env.dev up -d
+
+down:
+	docker compose down

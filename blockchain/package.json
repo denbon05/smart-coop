@@ -1,0 +1,27 @@
+{
+  "name": "smart-coop-decentralization",
+  "version": "1.0.0",
+  "description": "Blockchain decentralized logic for 'Housing cooperatives' platform",
+  "keywords": [
+    "blockchain",
+    "smart-contract",
+    "house-cooperatives",
+    "cooperative",
+    "house"
+  ],
+  "author": "denbon05",
+  "license": "MIT",
+  "scripts": {
+    "test": "npx hardhat test",
+    "node": "npx hardhat node"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@openzeppelin/contracts": "^4.8.0"
+  },
+  "devDependencies": {
+    "hardhat": "^2.18.0",
+    "ts-node": "^10.9.1",
+    "typescript": "~5.2.0"
+  }
+}

@@ -28,5 +28,10 @@ dist-ssr
 coverage
 *.local
 
-# generated on each npm install
-src/types/backend-api
+/cypress/videos/
+/cypress/screenshots/
+
+coverage
+coverage.json
+typechain
+typechain-types

@@ -1,27 +1,30 @@
 {
   "name": "smart-coop-backend",
   "version": "1.0.0",
-  "description": "Backend logic for 'Housing cooperatives' platform",
-  "keywords": [
-    "blockchain",
-    "smart-contract",
-    "house-cooperatives",
-    "cooperative",
-    "house"
-  ],
-  "author": "denbon05",
-  "license": "MIT",
+  "description": "Backend storage for smart-coop data",
+  "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test",
-    "node": "npx hardhat node"
+    "start": "npx nodemon src/bin/run.ts",
+    "migrate": "npx prisma migrate dev",
+    "test": "npx jest",
+    "build": "npx tsc",
+    "postinstall": "npx prisma generate"
   },
+  "author": "dnebon05",
+  "license": "MIT",
   "dependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "@openzeppelin/contracts": "^4.8.0"
+    "@fastify/cors": "^8.4.0",
+    "@prisma/client": "^5.4.2",
+    "dotenv-cli": "^7.3.0",
+    "fastify": "^4.24.1",
+    "fastify-plugin": "^4.5.1"
   },
   "devDependencies": {
-    "hardhat": "^2.18.0",
+    "@types/node": "^20.8.6",
+    "nodemon": "^3.0.1",
+    "pino-pretty": "^10.2.3",
+    "prisma": "^5.4.2",
     "ts-node": "^10.9.1",
-    "typescript": "~5.2.0"
+    "typescript": "^5.2.2"
   }
 }

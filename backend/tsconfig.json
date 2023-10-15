@@ -1,17 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "target": "ES6",
     "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
     "outDir": "dist",
-    "resolveJsonModule": true
-  },
-  "include": [
-    "./__tests__",
-    "./typechain-types"
-  ],
-  "files": [
-    "./hardhat.config.ts"
-  ]
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "typeRoots": [
+      "src/types/global"
+    ]
+  }
 }
