@@ -22,7 +22,6 @@ model Member {
   id       String @id
   name     String
   location String
-  email    String
   coopId   String
   coop     Coop   @relation(fields: [coopId], references: [id])
 }
@@ -30,7 +29,10 @@ model Member {
 model Coop {
   /// CoopGovernor hexdecimal address
   id       String   @id
-  name     String?
+  name     String
   location String
   members  Member[]
+
+  @@index(fields: [name], type: BTree)
+  @@index(fields: [location], type: BTree)
 }

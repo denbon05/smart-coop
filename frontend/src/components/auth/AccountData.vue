@@ -1,16 +1,17 @@
 <script setup lang="ts">
+import { useAuth } from '@/composables/auth';
+import type { CoopAccount, MemberAccount } from '@/entities/Account';
 import { useField, useForm } from 'vee-validate';
-import { AccountType, type AccountData } from '@/types/entities/account';
 
 const emit = defineEmits<{
-  next: [accountData: AccountData];
+  next: [accountData: MemberAccount | CoopAccount];
 }>();
 
 const props = defineProps<{
-  accountType: AccountType;
+  isCoop: boolean;
 }>();
 
-const { handleSubmit } = useForm({
+const { handleSubmit } = useForm<CoopAccount | MemberAccount>({
   validationSchema: {
     name(value: string) {
       if (value?.length >= 3) return true;
@@ -22,57 +23,59 @@ const { handleSubmit } = useForm({
 
       return 'Location needs to be at least 5 digits.';
     },
-    email(value: string) {
-      if (/^[a-z.-]+@[a-z.-]+\.[a-z]+$/i.test(value)) return true;
-
-      return 'Must be a valid e-mail.';
-    },
   },
 });
 
-const name = useField('name');
-const location = useField('location');
-const email = useField('email');
+const name = useField<string>('name');
+const location = useField<string>('location');
 
 const submit = handleSubmit((accountData) => {
-  // TODO handle isWorker
-  emit('next', accountData as AccountData);
+  emit('next', accountData);
 });
+
+const auth = useAuth();
+const title = props.isCoop
+  ? 'Creating a COOP'
+  : `Creating member of COOP "${auth.user.coop.name}"`;
 </script>
 
 <template>
-  <form @submit.prevent="submit" class="px-10 py-4">
-    <v-text-field
-      v-model="name.value.value"
-      :error-messages="name.errorMessage.value"
-      label="Name"
-      class="mt-1"
-      autofocus
-    ></v-text-field>
+  <section id="accountFormContainer">
+    <h3 class="text-h4 w-100 text-center mb-7">{{ title }}</h3>
 
-    <v-text-field
-      v-model="location.value.value"
-      :error-messages="location.errorMessage.value"
-      label="Location"
-      class="mt-1"
-    ></v-text-field>
+    <v-sheet elevation="2" rounded="lg" class="pa-4">
+      <form @submit.prevent="submit" class="px-10 py-4">
+        <div class="d-flex flex-column w-50">
+          <v-text-field
+            v-model="name.value.value"
+            :error-messages="name.errorMessage.value"
+            label="Name"
+            class="mt-1"
+            autofocus
+            variant="underlined"
+          ></v-text-field>
 
-    <v-text-field
-      v-model="email.value.value"
-      :error-messages="email.errorMessage.value"
-      label="E-mail"
-      class="mt-1"
-    ></v-text-field>
+          <v-text-field
+            v-model="location.value.value"
+            :error-messages="location.errorMessage.value"
+            label="Location"
+            class="mt-1"
+            variant="underlined"
+          ></v-text-field>
+        </div>
 
-    <div class="d-flex justify-end ma-3">
-      <v-btn
-        @click="submit"
-        class="me-4"
-        type="submit"
-        color="secondary-darken-1"
-      >
-        to the last step >
-      </v-btn>
-    </div>
-  </form>
+        <div class="d-flex justify-end mb-1 mt-5">
+          <v-btn
+            @click="submit"
+            variant="outlined"
+            class="me-4 btn-long"
+            type="submit"
+            color="green"
+          >
+            to the last step
+          </v-btn>
+        </div>
+      </form>
+    </v-sheet>
+  </section>
 </template>

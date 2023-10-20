@@ -1,6 +1,4 @@
 import AppError from '@/errors/AppError';
-import { governorCoopStorage, tokenCoopStorage } from '@/storage/contracts';
-import type { GovernorAccount } from '@/types/entities/account';
 import CoopGovernor from '@abi/CoopGovernor.sol/CoopGovernor.json';
 import CoopToken from '@abi/CoopToken.sol/CoopToken.json';
 import { ethers } from 'ethers';
@@ -17,9 +15,8 @@ const getCurrentSigner = () => {
   return new ethers.JsonRpcSigner(provider, window.ethereum!.selectedAddress!);
 };
 
-const getCoopGovernor = () => {
+const getCoopGovernor = (address: string) => {
   const signer = getCurrentSigner();
-  const address = governorCoopStorage.getAddress();
   if (!address) {
     throw new AppError('Governor Contract address is not found!');
   }
@@ -29,7 +26,7 @@ const getCoopGovernor = () => {
 
 const getCoopToken = () => {
   const signer = getCurrentSigner();
-  const address = tokenCoopStorage.getAddress();
+  const address = 'tokenCoopStorage.getAddress()';
   if (!address) {
     throw new AppError('Governor Token Contract address is not found!');
   }
@@ -75,56 +72,51 @@ export const deployGovernor = async () => {
   console.log(`CoopGovernor deployed to ${coopGovernor.target}`);
   console.log(`CoopToken deployed to ${coopToken.target}`);
   // save contracts addresses for future use
-  governorCoopStorage.setAddress(coopGovernor.target.toString());
-  tokenCoopStorage.setAddress(coopToken.target.toString());
+  // governorCoopStorage.setAddress(coopGovernor.target.toString());
+  // tokenCoopStorage.setAddress(coopToken.target.toString());
+  return coopGovernor.target;
 };
 
-export const isAccountConnectedToCoop = async (): Promise<boolean> => {
-  const governorAddress = governorCoopStorage.getAddress();
-  const tokenAddress = tokenCoopStorage.getAddress();
+export const fetchAccountData = async (): Promise<null> => {
+  // const governorAddress = governorCoopStorage.getAddress();
+  // const tokenAddress = tokenCoopStorage.getAddress();
 
-  if (!governorAddress || !tokenAddress) {
-    console.warn('Account is not connected to coop');
-    return false;
-  }
+  // if (!governorAddress || !tokenAddress) {
+  console.warn('Account is not connected to coop');
+  return null;
+  // }
 
-  const coopToken = getCoopToken();
+  // const coopToken = getCoopToken();
 
-  const accountBalance: bigint = await coopToken.balanceOf(
-    window.ethereum!.selectedAddress
-  );
-  console.log('accountBalance', accountBalance);
-  // user has to have voting power
-  return accountBalance > 0n;
+  // const accountBalance: bigint = await coopToken.balanceOf(
+  //   window.ethereum!.selectedAddress
+  // );
+  // console.log('accountBalance', accountBalance);
+  // // user has to have voting power
+  // return accountBalance > 0n;
 };
 
-export const joinToCoop = async (accountData: GovernorAccount) => {
-  const coopGovernor = getCoopGovernor();
+export const joinToCoop = async (governorAddress: string) => {
+  const coopGovernor = getCoopGovernor(governorAddress);
 
-  return coopGovernor.addMember({
-    ...accountData,
-    isMember: true,
-  });
+  return coopGovernor.join();
 };
 
 // ? let's say the amount due to pay could be constant
 export const payBill = async (amountDue = '0.01') => {
-  const signer = getCurrentSigner();
-  const coopGovernor = getCoopGovernor();
-
-  const value = ethers.parseEther(amountDue);
-
-  return signer.sendTransaction({
-    to: coopGovernor.target,
-    value,
-  });
+  // const signer = getCurrentSigner();
+  // const coopGovernor = getCoopGovernor();
+  // const value = ethers.parseEther(amountDue);
+  // return signer.sendTransaction({
+  //   to: coopGovernor.target,
+  //   value,
+  // });
 };
 
 export const makeProposal = async () => {
-  const coopGovernor = getCoopGovernor();
-  const coopToken = getCoopToken();
-  const signer = getCurrentSigner();
-
-  // pay some external service for their services
-  const calldata = coopToken.interface.encodeFunctionData('');
+  // const coopGovernor = getCoopGovernor();
+  // const coopToken = getCoopToken();
+  // const signer = getCurrentSigner();
+  // // pay some external service for their services
+  // const calldata = coopToken.interface.encodeFunctionData('');
 };

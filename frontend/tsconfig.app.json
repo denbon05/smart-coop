@@ -8,6 +8,7 @@
     "node_modules/**/*"
   ],
   "compilerOptions": {
+    "module": "ES2020",
     "composite": true,
     "baseUrl": ".",
     "resolveJsonModule": true,

@@ -5,6 +5,7 @@ import registerRoutes from "./routes";
 
 const app = fastify({
   logger: {
+    level: "info",
     transport: {
       target: "pino-pretty",
       options: {

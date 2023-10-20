@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { isAccountConnectedToCoop } from '@/api/eth-governor';
-import { connectToWallet } from '@/api/eth-wallet';
+import { connectToWallet } from '@/api/governor/eth-wallet';
 import { useAuth } from '@/composables/auth';
 import AppError from '@/errors/AppError';
 import type { ShowSnackbar } from '@/types/components/common';
 import { inject } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink } from 'vue-router';
 
 const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
 
@@ -13,25 +12,11 @@ const props = defineProps<{
   isAccountFetching: boolean;
 }>();
 
-const router = useRouter();
 const auth = useAuth();
-console.log('AppBar auth', auth);
 
 const connectWallet = async () => {
   try {
     await connectToWallet();
-    const isAccountInCoop = await isAccountConnectedToCoop();
-    if (isAccountInCoop) {
-      // show main page
-      router.push({
-        name: 'home',
-      });
-    } else {
-      // redirect to auth page
-      router.push({
-        name: 'auth',
-      });
-    }
   } catch (err) {
     const msg =
       err instanceof AppError ? err.message : 'Something went terribly wrong';
@@ -57,7 +42,11 @@ const connectWallet = async () => {
     <template v-slot:prepend>
       <RouterLink to="/">
         <v-app-bar-nav-icon>
-          <img src="@/assets/top-smart-tree.png" width="50" height="45" />
+          <img
+            src="@/assets/images/top-smart-tree.png"
+            width="50"
+            height="45"
+          />
         </v-app-bar-nav-icon>
       </RouterLink>
     </template>
@@ -76,12 +65,20 @@ const connectWallet = async () => {
 
     <template v-if="!props.isAccountFetching">
       <!-- show buttons after account fetched if there is one -->
-      <template v-if="auth.account?.isMember">
+      <template v-if="!auth.user.isGuest">
         <RouterLink to="/member">
           <v-btn variant="outlined" color="white" class="mx-2"> Account </v-btn>
         </RouterLink>
       </template>
-      <v-btn v-else plain @click="connectWallet"> Connect </v-btn>
+      <v-btn
+        :disabled="!!auth.selectedAddress"
+        v-else
+        variant="outlined"
+        rounded="lg"
+        @click="connectWallet"
+      >
+        Connect
+      </v-btn>
     </template>
   </v-app-bar>
 </template>

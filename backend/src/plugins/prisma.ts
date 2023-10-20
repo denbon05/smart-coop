@@ -4,7 +4,8 @@ import { FastifyInstance } from "fastify";
 
 const prismaPlugin = async (server: FastifyInstance) => {
   const prisma = new PrismaClient({
-    log: ["error", "warn"],
+    // log: ["error", "warn"],
+    log: ["query", "info"],
   });
 
   await prisma.$connect();

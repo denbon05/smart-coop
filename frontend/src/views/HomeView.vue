@@ -3,10 +3,6 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import CoopSection from '@/components/home/CoopSection.vue';
 
-const route = useRoute();
-
-const isCoopSectionSelected = computed(() => route.name === 'home');
-
 const sections = [
   {
     name: 'VOTING',
@@ -25,6 +21,13 @@ const sections = [
     link: '#',
   },
 ];
+
+const route = useRoute();
+
+const isCoopSectionSelected = computed(() => route.name === 'home');
+const isPartOfCoopSection = computed(() =>
+  route.matched.find(({ path }) => sections.find(({ link }) => path === link))
+);
 </script>
 
 <template>
@@ -52,8 +55,8 @@ const sections = [
       </v-container>
     </v-item-group>
 
-    <v-container v-else
-      ><v-row
+    <v-container
+      ><v-row v-if="isPartOfCoopSection"
         ><v-col>
           <v-list class="d-flex">
             <v-list-item v-for="section in sections" :key="section.name">

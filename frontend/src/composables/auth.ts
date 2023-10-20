@@ -1,27 +1,52 @@
-import type { GovernorAccount } from '@/types/entities/account';
-import { computed, reactive, readonly, toValue } from 'vue';
+import { fetchMember } from '@/api/server';
+import Guest from '@/entities/Guest';
+import Member from '@/entities/Member';
+import type { IAuth } from '@/types/composables/auth';
+import { computed, reactive, readonly, watchEffect } from 'vue';
 
 // global state
 const eth = computed(() => window.ethereum);
-const account = reactive<Partial<GovernorAccount>>({});
+const auth: IAuth = reactive({
+  user: new Guest(),
+  selectedAddress: null,
+  /** keep track on account data loading or not */
+  isLoading: false,
+});
 
-const setAccount = ({ isMember: exists = false }: GovernorAccount) => {
-  account.isMember = exists;
-};
+watchEffect(async () => {
+  auth.isLoading = true;
+  if (window.ethereum?.selectedAddress) {
+    // try to fetch user data
+    fetchMember(window.ethereum.selectedAddress)
+      .then((memberData) => {
+        if (memberData) {
+          // existed member
+          auth.user = new Member(memberData);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        auth.isLoading = false;
+      });
+  }
+});
 
-export const useAuth = () => {
+export const useAuth = (): IAuth => {
   if (!eth.value) {
-    // no ethereum in window
-    return {
-      setAccount,
-    };
+    // there is no injected ethereum in the browser
+    console.error('there is no injected ethereum in the browser');
+    return auth;
   }
 
   const { selectedAddress } = readonly(window.ethereum!);
+  if (!selectedAddress) {
+    console.warn('Wallet is not connected');
+    return auth;
+  }
 
-  return {
-    selectedAddress,
-    account: toValue(account),
-    setAccount,
-  };
+  auth.selectedAddress = selectedAddress;
+
+  return auth;
 };

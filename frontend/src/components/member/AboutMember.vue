@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useAuth } from '@/composables/auth';
+// import { useAuth } from '@/composables/auth';
 
-const auth = useAuth();
+// const auth = useAuth();
 </script>
 
 <template>
@@ -10,11 +10,11 @@ const auth = useAuth();
       <v-card class="mx-auto" variant="tonal">
         <v-card-item>
           <div>
-            <div class="text-overline mb-1">tonal</div>
+            <!-- <div class="text-overline mb-1">tonal</div>
             <div class="text-h6 mb-1">Headline</div>
             <div class="text-caption">
               {{ auth.selectedAddress }}
-            </div>
+            </div> -->
           </div>
         </v-card-item>
 
