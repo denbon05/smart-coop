@@ -16,7 +16,7 @@ const emit = defineEmits(['next', 'cancel']);
     <h4 class="text-h4">{{ `${preTitle} "${props.account.name}"` }}</h4>
 
     <div class="d-flex justify-space-between">
-      <v-list elevation="0">
+      <v-list elevation="0" class="bg-transparent">
         <v-list-item class="my-2">
           <template v-slot:prepend>
             <v-icon icon="mdi-account-circle-outline"></v-icon>

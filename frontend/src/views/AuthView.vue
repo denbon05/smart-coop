@@ -1,23 +1,22 @@
 <script setup lang="ts">
-import AccountData from '@/components/auth/AccountData.vue';
-import AccountPreview from '@/components/auth/AccountPreview.vue';
-import { CoopAccount, MemberAccount } from '@/entities/Account';
-import { AccountType, type Account } from '@/types/entities/account';
-import { computed, inject, reactive, ref } from 'vue';
-// assets
+import { deployGovernor, joinCoopGovernor } from '@/api/governor/eth-governor';
+import { addCoop, joinCoop } from '@/api/server';
 import cityBg from '@/assets/images/city-buildings.svg';
 import redMember from '@/assets/images/red-member.svg';
-import { deployGovernor, joinToCoop } from '@/api/governor/eth-governor';
+import AccountData from '@/components/auth/AccountData.vue';
+import AccountPreview from '@/components/auth/AccountPreview.vue';
+import { useAuth } from '@/composables/auth';
+import { CoopAccount, MemberAccount } from '@/entities/Account';
+import Member from '@/entities/Member';
 import AppError from '@/errors/AppError';
 import router from '@/router';
 import { SnackbarColor, type ShowSnackbar } from '@/types/components/common';
-import { addCoop } from '@/api/server';
-import { useAuth } from '@/composables/auth';
+import { AccountType } from '@/types/entities/account';
+import { RouteNames } from '@/types/entities/router';
+import { computed, inject, reactive, ref } from 'vue';
 
 const props = defineProps<{ accountType: AccountType }>();
 const auth = useAuth();
-
-console.log('AUTH!!', auth);
 
 const isCoop = props.accountType === AccountType.COOP;
 
@@ -53,17 +52,29 @@ const createOrJoin = async () => {
       });
     } else {
       // join to existed smart coop
-      // TODO
-      console.error('NOT IMPLEMENTED!!!!!!');
-      throw Error('NOT IMPLEMENTED!!!!!!');
-      // await joinToCoop(account);
+      await joinCoopGovernor(auth.user.coop.id);
+      // write to db user joined the coop
+      const memberData = {
+        ...account,
+        coopId: auth.user.coop.id,
+        id: auth.selectedAddress!,
+      };
+      await joinCoop(memberData);
+      auth.user = new Member({
+        ...memberData,
+        coop: auth.user.coop,
+      });
+
       showSnackbar({
-        msg: 'Congrats! You created joined the cooperative!',
+        msg: 'Congrats! You joined the cooperative!',
         color: SnackbarColor.OK,
       });
     }
+    const defaultPage = auth.user.isGuest
+      ? RouteNames.WELCOME
+      : RouteNames.COOP;
     router.push({
-      name: 'home',
+      name: defaultPage,
     });
   } catch (err) {
     showSnackbar({
@@ -121,5 +132,6 @@ const createOrJoin = async () => {
 
 .bg-associative {
   width: inherit;
+  background-color: transparent;
 }
 </style>

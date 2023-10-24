@@ -1,7 +1,6 @@
 import {
   time,
   loadFixture,
-  mineUpTo,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
@@ -25,6 +24,13 @@ describe("CoopGovernor", function () {
 
     return { s1, s2, s3, s4, coopGovernor, coopToken };
   };
+
+  it("Governor should expose COOP token address", async () => {
+    const { coopGovernor, coopToken } = await loadFixture(deploy);
+    const tokenAddress = await coopGovernor.token();
+    console.log("tokenAddress", tokenAddress);
+    expect(tokenAddress).eq(coopToken.target);
+  });
 
   it("Deployer has to have voting power", async () => {
     const { s1, coopToken } = await loadFixture(deploy);

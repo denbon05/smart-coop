@@ -1,7 +1,10 @@
 import AppError from '@/errors/AppError';
+import type { IProposal } from '@/types/governor';
+import { makeProposeDescription } from '@/utils/governor';
 import CoopGovernor from '@abi/CoopGovernor.sol/CoopGovernor.json';
 import CoopToken from '@abi/CoopToken.sol/CoopToken.json';
-import { ethers } from 'ethers';
+import type { Contract } from 'ethers';
+import { ethers, parseEther } from 'ethers';
 
 const getProvider = () => {
   if (!window.ethereum) {
@@ -24,9 +27,23 @@ const getCoopGovernor = (address: string) => {
   return new ethers.Contract(address, CoopGovernor.abi, signer);
 };
 
-const getCoopToken = () => {
+/**
+ * Transfer specific amount to governor contract.
+ * @param address Coop governor address
+ * @param dueAmount Amount to pay in ETH
+ */
+export const payBill = async (address: string, dueAmount = '0.2') => {
   const signer = getCurrentSigner();
-  const address = 'tokenCoopStorage.getAddress()';
+  const coopGovernor = getCoopGovernor(address);
+  return signer.sendTransaction({
+    to: coopGovernor.target,
+    value: parseEther(dueAmount),
+  });
+};
+
+const getCoopToken = async (coopGovernor: Contract) => {
+  const signer = getCurrentSigner();
+  const address = await coopGovernor.token();
   if (!address) {
     throw new AppError('Governor Token Contract address is not found!');
   }
@@ -77,46 +94,34 @@ export const deployGovernor = async () => {
   return coopGovernor.target;
 };
 
-export const fetchAccountData = async (): Promise<null> => {
-  // const governorAddress = governorCoopStorage.getAddress();
-  // const tokenAddress = tokenCoopStorage.getAddress();
-
-  // if (!governorAddress || !tokenAddress) {
-  console.warn('Account is not connected to coop');
-  return null;
-  // }
-
-  // const coopToken = getCoopToken();
-
-  // const accountBalance: bigint = await coopToken.balanceOf(
-  //   window.ethereum!.selectedAddress
-  // );
-  // console.log('accountBalance', accountBalance);
-  // // user has to have voting power
-  // return accountBalance > 0n;
-};
-
-export const joinToCoop = async (governorAddress: string) => {
+export const joinCoopGovernor = async (governorAddress: string) => {
   const coopGovernor = getCoopGovernor(governorAddress);
 
   return coopGovernor.join();
 };
 
-// ? let's say the amount due to pay could be constant
-export const payBill = async (amountDue = '0.01') => {
-  // const signer = getCurrentSigner();
-  // const coopGovernor = getCoopGovernor();
-  // const value = ethers.parseEther(amountDue);
-  // return signer.sendTransaction({
-  //   to: coopGovernor.target,
-  //   value,
-  // });
-};
+export const makeProposal = async (
+  governorAddress: string,
+  { title, description, cost: priceInETH, receiver }: IProposal
+) => {
+  const coopGovernor = getCoopGovernor(governorAddress);
+  const coopToken = await getCoopToken(coopGovernor);
+  const signer = getCurrentSigner();
 
-export const makeProposal = async () => {
-  // const coopGovernor = getCoopGovernor();
-  // const coopToken = getCoopToken();
-  // const signer = getCurrentSigner();
-  // // pay some external service for their services
-  // const calldata = coopToken.interface.encodeFunctionData('');
+  // delegate member voting power to himself
+  await coopToken.delegate(await signer.getAddress());
+
+  const priceInWei = parseEther(priceInETH);
+  // pay some external service for their services
+  const calldata = coopGovernor.interface.encodeFunctionData('hireService', [
+    receiver.id,
+    priceInWei,
+  ]);
+
+  return coopGovernor.propose(
+    [coopGovernor.target],
+    [0],
+    [calldata],
+    makeProposeDescription(title, description)
+  );
 };

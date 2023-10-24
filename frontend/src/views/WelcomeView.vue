@@ -2,11 +2,12 @@
 import BriefDescription from '@/components/welcome/BriefDescription.vue';
 import CallToActionBtn from '@/components/welcome/CallToActionBtn.vue';
 import CoopSearch from '@/components/welcome/CoopSearch.vue';
+import { RouteNames } from '@/types/entities/router';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
-const isWelcomePage = computed(() => route.name === 'welcome');
+const isWelcomePage = computed(() => route.name === RouteNames.WELCOME);
 </script>
 
 <template>

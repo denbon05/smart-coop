@@ -29,7 +29,13 @@ export default (app: FastifyInstance) => {
           },
         });
 
-        return res;
+        reply.send(res);
       },
-    );
+    )
+
+    .get("/members", async (req, reply) => {
+      const res = await app.prisma.member.findMany();
+
+      reply.send(res);
+    });
 };

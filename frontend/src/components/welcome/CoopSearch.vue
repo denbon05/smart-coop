@@ -73,6 +73,7 @@ const selectCoop = (coop: Coop | string) => {
           :loading="isLoading"
           @update:search="search"
           @update:model-value="selectCoop"
+          no-filter
           return-object
           variant="solo"
           :items="coopList"

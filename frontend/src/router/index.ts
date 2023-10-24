@@ -1,10 +1,13 @@
 import { AccountType } from '@/types/entities/account';
 import { RouteNames } from '@/types/entities/router';
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import CoopView from '../views/CoopView.vue';
 import NotFound from '../views/NotFound.vue';
 import WelcomeView from '../views/WelcomeView.vue';
-import { isGuest, isMember } from './permissions';
+import { defineHomePage, isGuest, isMember } from './hooks';
+import { useAuth } from '@/composables/auth';
+
+const auth = useAuth();
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,39 +17,29 @@ const router = createRouter({
   routes: [
     // will match everything and put it under `$route.params.pathMatch`
     { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
+
+    // redirect from root path to available to the user
+    {
+      path: '/',
+      redirect: {
+        name: auth.user.isGuest ? RouteNames.WELCOME : RouteNames.COOP,
+      },
+    },
+
     // home page for guest
     {
-      path: '/',
+      path: '/welcome',
       name: RouteNames.WELCOME,
       component: WelcomeView,
-      beforeEnter: [isGuest],
-      children: [
-        {
-          path: 'auth',
-          name: RouteNames.AUTH,
-          children: [
-            {
-              path: 'coop',
-              name: RouteNames.AUTH_COOP,
-              props: { accountType: AccountType.COOP },
-              component: () => import('../views/AuthView.vue'),
-            },
-            {
-              path: 'coop',
-              name: RouteNames.JOIN_COOP,
-              props: { accountType: AccountType.MEMBER },
-              component: () => import('../views/AuthView.vue'),
-            },
-          ],
-        },
-      ],
+      beforeEnter: [defineHomePage, isGuest],
     },
+
     // home page for member of the coop
     {
-      path: '/',
-      name: RouteNames.HOME,
-      component: HomeView,
-      beforeEnter: [isMember],
+      path: '/coop',
+      name: RouteNames.COOP,
+      component: CoopView,
+      beforeEnter: [defineHomePage, isMember],
       children: [
         {
           name: RouteNames.NEW_PROPOSAL,
@@ -58,11 +51,11 @@ const router = createRouter({
           path: 'proposals',
           component: () => import('@/components/coop/ProposalList.vue'),
         },
-        // {
-        //   name: 'coop-discover',
-        //   path: 'discover',
-        //   component: () => import('@/components/coop/DiscoverCoop.vue'),
-        // },
+        {
+          name: RouteNames.COOP_DISCOVER,
+          path: 'discover',
+          component: () => import('@/components/coop/DiscoverCoop.vue'),
+        },
         {
           name: RouteNames.PROPOSAL_HISTORY,
           path: 'proposal-history',
@@ -70,6 +63,29 @@ const router = createRouter({
         },
       ],
     },
+
+    // auth
+    {
+      path: '/auth',
+      name: RouteNames.AUTH,
+      beforeEnter: [isGuest],
+      children: [
+        {
+          path: 'coop',
+          name: RouteNames.AUTH_COOP,
+          props: { accountType: AccountType.COOP },
+          component: () => import('../views/AuthView.vue'),
+        },
+        {
+          path: 'coop',
+          name: RouteNames.JOIN_COOP,
+          props: { accountType: AccountType.MEMBER },
+          component: () => import('../views/AuthView.vue'),
+        },
+      ],
+    },
+
+    // account
     {
       path: '/member',
       name: RouteNames.ACCOUNT,

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { payBill } from '@/api/governor/eth-governor';
 import { connectToWallet } from '@/api/governor/eth-wallet';
 import { useAuth } from '@/composables/auth';
 import AppError from '@/errors/AppError';
-import type { ShowSnackbar } from '@/types/components/common';
-import { inject } from 'vue';
+import { SnackbarColor, type ShowSnackbar } from '@/types/components/common';
+import { RouteNames } from '@/types/entities/router';
+import { ref } from 'vue';
+import { computed, inject } from 'vue';
 import { RouterLink } from 'vue-router';
 
 const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
@@ -17,6 +20,8 @@ const auth = useAuth();
 const connectWallet = async () => {
   try {
     await connectToWallet();
+    // update auth state
+    useAuth();
   } catch (err) {
     const msg =
       err instanceof AppError ? err.message : 'Something went terribly wrong';
@@ -24,6 +29,24 @@ const connectWallet = async () => {
     console.error(err);
   }
 };
+
+const isBillTxOn = ref(false);
+
+const payDueAmount = async () => {
+  isBillTxOn.value = true;
+  try {
+    await payBill(auth.user.coop.id);
+    showSnackbar({ msg: 'Bill payed', color: SnackbarColor.OK });
+  } catch (err) {
+    console.error(err);
+    showSnackbar({ msg: 'Failed to pay the bill' });
+  }
+  isBillTxOn.value = false;
+};
+
+const defaultPage = computed(() =>
+  auth.user.isGuest ? RouteNames.WELCOME : RouteNames.COOP
+);
 </script>
 
 <template>
@@ -40,7 +63,11 @@ const connectWallet = async () => {
     </template>
 
     <template v-slot:prepend>
-      <RouterLink to="/">
+      <RouterLink
+        :to="{
+          name: defaultPage,
+        }"
+      >
         <v-app-bar-nav-icon>
           <img
             src="@/assets/images/top-smart-tree.png"
@@ -53,7 +80,9 @@ const connectWallet = async () => {
 
     <v-app-bar-title
       ><RouterLink
-        to="/"
+        :to="{
+          name: defaultPage,
+        }"
         class="text-decoration-none text-white"
         id="logoTitle"
       >
@@ -66,9 +95,27 @@ const connectWallet = async () => {
     <template v-if="!props.isAccountFetching">
       <!-- show buttons after account fetched if there is one -->
       <template v-if="!auth.user.isGuest">
-        <RouterLink to="/member">
-          <v-btn variant="outlined" color="white" class="mx-2"> Account </v-btn>
-        </RouterLink>
+        <section class="d-flex align-center">
+          <v-btn
+            @click="payDueAmount"
+            class="mx-3"
+            variant="outlined"
+            rounded="lg"
+            :disabled="isBillTxOn"
+            >Pay bill</v-btn
+          >
+          <RouterLink
+            :to="{
+              name: RouteNames.ACCOUNT,
+            }"
+            class="text-decoration-none text-grey-darken-4"
+          >
+            <section id="accountBarInfo" class="d-flex flex-column text-end">
+              <strong>{{ auth.user.name }}</strong>
+              <small>{{ auth.user.location }}</small>
+            </section>
+          </RouterLink>
+        </section>
       </template>
       <v-btn
         :disabled="!!auth.selectedAddress"

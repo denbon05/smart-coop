@@ -8,8 +8,6 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "./CoopToken.sol";
 
-import "hardhat/console.sol";
-
 contract CoopGovernor is
     Governor,
     GovernorSettings,
@@ -17,8 +15,6 @@ contract CoopGovernor is
     GovernorVotes,
     GovernorVotesQuorumFraction
 {
-    address private tokenAddress;
-
     // Ethereum doesn't have a fixed block time,
     // but on average, it's approximately 13-15 seconds per block
     constructor(IVotes _token)
@@ -26,20 +22,18 @@ contract CoopGovernor is
         GovernorSettings(1 /* 1 block */, 50 /* 10 minutes */, 1e18)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
-    {
-        tokenAddress = address(_token);
-    }
+    {}
 
     receive() external payable override {
         require(_executor() == address(this), "Governor: must send to executor");
         // mint vote power after bill payed
-        CoopToken(tokenAddress).mint(msg.sender, 1e18);
+        CoopToken(address(GovernorVotes.token)).mint(msg.sender, 1e18);
     }
 
     // ? for now anyone can join to any coop
     // TODO prevent from free connection (add ESCROW? members will accept newbies?)
     function join() public {
-        CoopToken(tokenAddress).mint(msg.sender, 1e18);
+        CoopToken(address(GovernorVotes.token)).mint(msg.sender, 1e18);
     }
 
     // ? the main idea is to hire external services
@@ -85,4 +79,10 @@ contract CoopGovernor is
     {
         return super.proposalThreshold();
     }
+
+// mock the error
+// Error: Transaction reverted: function returned an unexpected amount of data
+    // function clock() public view virtual override(GovernorVotes, IGovernor) returns (uint48) {
+    //     return SafeCast.toUint48(block.number);
+    // }
 }

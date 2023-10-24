@@ -23,7 +23,6 @@ export default (app: FastifyInstance) => {
         reply,
       ) => {
         const { value } = req.query;
-        app.log.info({ value });
 
         const res = await app.prisma.coop.findMany({
           where: {
@@ -43,7 +42,6 @@ export default (app: FastifyInstance) => {
             ],
           },
         });
-        app.log.info({ res });
 
         reply.send(res);
       },

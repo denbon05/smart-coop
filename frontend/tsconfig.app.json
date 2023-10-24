@@ -1,7 +1,8 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": [
-    "src/"
+    "src/",
+    "src/artifacts/contracts/**/*.json"
   ],
   "exclude": [
     "__tests__/**/*",
