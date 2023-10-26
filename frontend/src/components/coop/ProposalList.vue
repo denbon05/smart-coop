@@ -1,48 +1,28 @@
 <script setup lang="ts">
-const desserts = [
-  {
-    name: 'Frozen Yogurt',
-    calories: 159,
-  },
-  {
-    name: 'Ice cream sandwich',
-    calories: 237,
-  },
-  {
-    name: 'Eclair',
-    calories: 262,
-  },
-  {
-    name: 'Cupcake',
-    calories: 305,
-  },
-  {
-    name: 'Gingerbread',
-    calories: 356,
-  },
-  {
-    name: 'Jelly bean',
-    calories: 375,
-  },
-  {
-    name: 'Lollipop',
-    calories: 392,
-  },
-  {
-    name: 'Honeycomb',
-    calories: 408,
-  },
-  {
-    name: 'Donut',
-    calories: 452,
-  },
-  {
-    name: 'KitKat',
-    calories: 518,
-  },
-];
+import { fetchProposals } from '@/api/governor/eth-governor';
+import { useAuth } from '@/composables/auth';
+import type { ShowSnackbar } from '@/types/components/common';
+import type { FetchedProposal } from '@/types/governor';
+import { inject, ref } from 'vue';
 
-// TODO fetch proposals
+const proposals = ref<FetchedProposal[]>([]);
+
+const auth = useAuth();
+const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
+
+fetchProposals(auth.user.coopId)
+  .then((fetchedProposals) => {
+    console.log(
+      'PropsalList res',
+      fetchedProposals,
+      '\n------------------------\n'
+    );
+    proposals.value = fetchedProposals;
+  })
+  .catch((err) => {
+    console.error(err);
+    showSnackbar({ msg: 'Failed to fetch the proposals' });
+  });
 </script>
 
 <template>
@@ -70,19 +50,19 @@ const desserts = [
       <section id="proposalTables" class="d-flex">
         <v-table class="flex-grow-1 mr-4">
           <tbody>
-            <tr v-for="item in desserts" :key="item.name">
-              <td>{{ item.name }}</td>
+            <tr v-for="proposal in proposals" :key="proposal.id">
+              <td>{{ proposal.title }}</td>
             </tr>
           </tbody>
         </v-table>
 
         <v-table class="w-50">
           <tbody>
-            <tr v-for="item in desserts" :key="item.calories">
-              <td align="center">{{ item.calories }}</td>
-              <td align="center">{{ item.calories }}</td>
-              <td align="center">{{ item.calories }}</td>
-              <td align="center">{{ item.calories }}</td>
+            <tr v-for="proposal in proposals" :key="proposal.description">
+              <td align="center">{{ proposal.votedFor }}</td>
+              <td align="center">{{ proposal.votedAgainst }}</td>
+              <td align="center">{{ proposal.abstain }}</td>
+              <td align="center">{{ proposal.voteEnd }}</td>
             </tr>
           </tbody>
         </v-table>

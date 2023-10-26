@@ -28,7 +28,6 @@ describe("CoopGovernor", function () {
   it("Governor should expose COOP token address", async () => {
     const { coopGovernor, coopToken } = await loadFixture(deploy);
     const tokenAddress = await coopGovernor.token();
-    console.log("tokenAddress", tokenAddress);
     expect(tokenAddress).eq(coopToken.target);
   });
 

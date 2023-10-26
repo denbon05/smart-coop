@@ -79,10 +79,4 @@ contract CoopGovernor is
     {
         return super.proposalThreshold();
     }
-
-// mock the error
-// Error: Transaction reverted: function returned an unexpected amount of data
-    // function clock() public view virtual override(GovernorVotes, IGovernor) returns (uint48) {
-    //     return SafeCast.toUint48(block.number);
-    // }
 }
