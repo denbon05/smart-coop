@@ -14,6 +14,9 @@ export default defineConfig({
       ),
     },
   },
+  optimizeDeps: {
+    exclude: ['chart.js'],
+  },
   server: {
     host: true,
   },

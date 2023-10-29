@@ -1,9 +1,23 @@
+import { COOP_HIRE_SERVICE_KEY } from '@/constants';
 import AppError from '@/errors/AppError';
-import { type FetchedProposal, type IProposal } from '@/types/governor';
 import {
-  makeProposeDescription,
+  ProposalStatus,
+  type CastVoteParams,
+  type FetchedProposal,
+  type GovernorDetails,
+  type HumanProposalState,
+  type IProposal,
+  type MemberDetails,
+  type ProposalDetails,
+  type MemberVotingHistory,
+} from '@/types/governor';
+import {
+  formatVoteByKey,
+  formatVotingWeightToVotesAmount,
+  isStatusIncludesProposalState,
   parseProposalDescription,
   proposalStateByEnumValue,
+  stringifyProposeDescription,
 } from '@/utils/governor';
 import CoopGovernor from '@abi/CoopGovernor.sol/CoopGovernor.json';
 import CoopToken from '@abi/CoopToken.sol/CoopToken.json';
@@ -15,6 +29,7 @@ import {
   parseEther,
   toUtf8Bytes,
 } from 'ethers';
+import { fetchAccounts } from '../server';
 
 const getProvider = () => {
   if (!window.ethereum) {
@@ -123,26 +138,31 @@ export const makeProposal = async (
 
   const priceInWei = parseEther(priceInETH);
   // pay some external service for their services
-  const calldata = coopGovernor.interface.encodeFunctionData('hireService', [
-    receiver.id,
-    priceInWei,
-  ]);
+  const calldata = coopGovernor.interface.encodeFunctionData(
+    COOP_HIRE_SERVICE_KEY,
+    [receiver.id, priceInWei]
+  );
 
   const tx = await coopGovernor.propose(
     [coopGovernor.target],
     [0],
     [calldata],
-    makeProposeDescription(title, description)
+    stringifyProposeDescription(title, description)
   );
-  const receipt = await tx.wait();
 
-  console.log('!!!!!!', receipt);
-  return tx;
+  return tx.wait();
 };
 
+/**
+ * @param {string} governorAddress
+ * @param {ProposalStatus} proposalStatus There are 2 statuses available
+ * 'AVAILABLE' and 'HISTORY'
+ */
 export const fetchProposals = async (
-  governorAddress: string
+  governorAddress: string,
+  proposalStatus: ProposalStatus = ProposalStatus.AVAILABLE
 ): Promise<FetchedProposal[]> => {
+  // TODO refactor
   const provider = getProvider();
 
   // todo compute actually needed range of blocks
@@ -163,26 +183,44 @@ export const fetchProposals = async (
     toBlock,
   });
 
-  console.log('proposalCreatedLogs', proposalCreatedLogs);
+  // console.log('proposalCreatedLogs', proposalCreatedLogs);
 
   const proposalCreatedEventFilter = coopGovernor.filters.ProposalCreated();
-  console.log('eventFilter', proposalCreatedEventFilter);
+  // console.log('eventFilter', proposalCreatedEventFilter);
 
-  const formattedProposalsPromises = (proposalCreatedLogs ?? []).map<
-    Promise<FetchedProposal>
-  >(async (log) => {
+  const coopMembers = await fetchAccounts({ coopId: governorAddress });
+  const totalAmountOfVotes = coopMembers.length;
+  // console.log('############ totalAmountOfVotes', totalAmountOfVotes);
+
+  const formattedProposalsPromise = (proposalCreatedLogs ?? []).reduce<
+    Promise<FetchedProposal[]>
+  >(async (promiseAcc, log) => {
+    const acc = await promiseAcc;
     // decode the event log
     const decodedLog = coopGovernor.interface.decodeEventLog(
       proposalCreatedEventFilter.fragment,
       log.data,
       log.topics
     );
-    console.log('decodedLog', decodedLog);
+    // console.log('decodedLog', decodedLog);
     const {
       proposalId: proposalIdBigint,
       description: descriptionWithTitle,
       proposer: proposerAddress,
     } = decodedLog;
+
+    const proposalId = proposalIdBigint.toString();
+    const coopProposalState: bigint = await coopGovernor.state(proposalId);
+
+    // console.log({
+    //   proposalStatus,
+    //   coopProposalState,
+    // });
+    if (!isStatusIncludesProposalState(coopProposalState, proposalStatus)) {
+      // filter state doesn't match
+      return acc;
+    }
+
     // start and end properties are not a Proxy
     // `voteStart` and `voteEnd` indexes are 6 and 7
     // of the ProposalCreated event signature
@@ -191,65 +229,201 @@ export const fetchProposals = async (
       parseProposalDescription(descriptionWithTitle);
     // there is only one calldata designed
     const [calldata] = decodedLog.calldatas;
-    console.log('calldata', calldata);
+    // console.log('calldata', calldata);
     // 'hireService' the function to execute of the smart-coop
     const [receiverAddress, priceInWei] =
-      coopGovernor.interface.decodeFunctionData('hireService', calldata);
-    const proposalId = proposalIdBigint.toString();
-    const proposalStateEnumValue: bigint = await coopGovernor.state(proposalId);
-    // console.log(
-    //   '!!!!!!!!!1 state',
-    //   proposalStateByEnumValue[proposalStateEnumValue.toString()]
-    // );
+      coopGovernor.interface.decodeFunctionData(
+        COOP_HIRE_SERVICE_KEY,
+        calldata
+      );
+
+    // console.log('proposalStateEnumValue', proposalStateEnumValue);
+    const {
+      forVotes: forVotesBigint,
+      againstVotes: againstVotesBigint,
+      abstainVotes: abstainVotesBigint,
+    } = await coopGovernor.proposalVotes(proposalId);
     // in order to gain the human readable state
     // obtain the key and cast the type
     const proposalStateKey =
-      proposalStateEnumValue.toString() as keyof typeof proposalStateByEnumValue;
+      coopProposalState.toString() as keyof typeof proposalStateByEnumValue;
 
-    return {
-      id: proposalId,
-      cost: formatEther(priceInWei),
-      receiverAddress,
-      description,
-      title,
-      proposerAddress,
-      state: proposalStateByEnumValue[proposalStateKey],
-      votedAgainst: 0,
-      votedFor: 0,
-      abstain: 0,
-      // todo format the time
-      voteEnd: voteEndUint,
-      voteStart: voteStartUint,
-    };
-  });
+    const forVotes = formatVotingWeightToVotesAmount(forVotesBigint);
+    const againstVotes = formatVotingWeightToVotesAmount(againstVotesBigint);
+    const abstainVotes = formatVotingWeightToVotesAmount(abstainVotesBigint);
 
-  // ? compute the votes of the proposals
+    console.log({ forVotesBigint, forVotes, againstVotes, abstainVotes });
+
+    return [
+      ...acc,
+      {
+        id: proposalId,
+        cost: formatEther(priceInWei),
+        receiverAddress,
+        description,
+        title,
+        proposerAddress,
+        state: proposalStateByEnumValue[proposalStateKey] as HumanProposalState,
+        forVotes,
+        againstVotes,
+        /** always show abstained votes */
+        abstainVotes:
+          abstainVotes || totalAmountOfVotes - (forVotes + againstVotes),
+        // todo format the time
+        voteEnd: voteEndUint,
+        voteStart: voteStartUint,
+      },
+    ];
+  }, Promise.resolve([]));
+
+  const formattedProposals: FetchedProposal[] = await formattedProposalsPromise;
+
+  return formattedProposals;
+};
+
+export const fetchProposalDetails = async (
+  governorAddress: string,
+  proposalId: string
+): Promise<ProposalDetails> => {
+  const signer = getCurrentSigner();
+  const coopGovernor = getCoopGovernor(governorAddress);
+
+  const hasAddressVoted = await coopGovernor.hasVoted(
+    proposalId,
+    signer.address
+  );
+
+  return {
+    hasAddressVoted,
+  };
+};
+
+export const fetchGovernorDetails = async (
+  governorAddress: string
+): Promise<GovernorDetails> => {
+  // const coopGovernor = getCoopGovernor(governorAddress);
+  const provider = getProvider();
+
+  const balanceInWei = await provider.getBalance(governorAddress);
+
+  return {
+    balanceInEth: ethers.formatEther(balanceInWei),
+  };
+};
+
+export const fetchMemberDetails = async (
+  governorAddress: string
+): Promise<MemberDetails> => {
+  const provider = getProvider();
+  const signer = getCurrentSigner();
+  const coopGovernor = getCoopGovernor(governorAddress);
+  const coopToken = await getCoopToken(coopGovernor);
+
+  const balanceInWei = await provider.getBalance(signer.address);
+  const tokenBalanceInWei = await coopToken.balanceOf(signer.address);
+
+  return {
+    balanceInEth: ethers.formatEther(balanceInWei),
+    votingPower: tokenBalanceInWei.toString(),
+    votesAmount: formatVotingWeightToVotesAmount(tokenBalanceInWei),
+  };
+};
+
+export const fetchMemberVotingHistory = async (
+  governorAddress: string
+): Promise<MemberVotingHistory> => {
+  // TODO limit the searching range
+  const fromBlock = '0x0';
+  const toBlock = 'latest';
+
+  const provider = getProvider();
+  const signer = getCurrentSigner();
+  const coopGovernor = getCoopGovernor(governorAddress);
 
   const voteCastHash = keccak256(
+    // toUtf8Bytes('PaymentReceived(address,uint256)')
     toUtf8Bytes('VoteCast(address,uint256,uint8,uint256,string)')
   );
+  const zeroPaddedSignerAddress = ethers.zeroPadValue(signer.address, 32);
+  const voteCastFilter = coopGovernor.filters.VoteCast(signer.address);
   const voteCastLogs = await provider.getLogs({
     address: coopGovernor.target.toString(),
-    topics: [voteCastHash],
+    topics: [voteCastHash, zeroPaddedSignerAddress],
     fromBlock,
     toBlock,
   });
-  const voteCastEventFilter = coopGovernor.filters.VoteCast();
 
-  console.log('\n\n ------------ BEGIN');
-  (voteCastLogs ?? []).map((log) => {
+  return voteCastLogs.map((log) => {
+    const [, proposalIdBigint, supportBigint] =
+      coopGovernor.interface.decodeEventLog(
+        voteCastFilter.fragment,
+        log.data,
+        log.topics
+      );
+    return {
+      proposalId: proposalIdBigint.toString(),
+      decision: formatVoteByKey(supportBigint),
+    };
+  });
+};
+
+export const fetchMemberPaymentHistory = async (governorAddress: string) => {
+  // TODO limit the searching range
+  const fromBlock = '0x0';
+  const toBlock = 'latest';
+
+  const provider = getProvider();
+  const signer = getCurrentSigner();
+  const coopGovernor = getCoopGovernor(governorAddress);
+
+  const paymentHash = keccak256(
+    // toUtf8Bytes('PaymentReceived(address,uint256)')
+    toUtf8Bytes('PaymentReceived(address,uint256)')
+  );
+
+  const zeroPaddedSignerAddress = ethers.zeroPadValue(signer.address, 32);
+  const paymentReceivedFilter = coopGovernor.filters.PaymentReceived(
+    signer.address
+  );
+  const paymentLogs = await provider.getLogs({
+    address: coopGovernor.target.toString(),
+    topics: [paymentHash, zeroPaddedSignerAddress],
+    fromBlock,
+    toBlock,
+  });
+  console.log('paymentLogs', paymentLogs);
+  console.log('paymentReceivedFilter', paymentReceivedFilter.fragment);
+
+  return paymentLogs.map((log) => {
+    // todo compute blockNumber time ago
+    console.log('!!!!!!!! log', log);
     const decodedLog = coopGovernor.interface.decodeEventLog(
-      voteCastEventFilter.fragment,
+      paymentReceivedFilter.fragment,
       log.data,
       log.topics
     );
     console.log('decodedLog', decodedLog);
+    // return {
+    //   proposalId: proposalIdBigint.toString(),
+    //   decision: formatVoteByKey(supportBigint),
+    // };
   });
-  console.log('\n\n ----------------END');
+};
 
-  const formattedProposals: FetchedProposal[] = await Promise.all(
-    formattedProposalsPromises
-  );
+export const castVote = async ({
+  governorAddress,
+  proposalId,
+  voteKey,
+}: CastVoteParams) => {
+  const signer = getCurrentSigner();
+  const coopGovernor = getCoopGovernor(governorAddress);
+  const coopToken = await getCoopToken(coopGovernor);
 
-  return formattedProposals;
+  // delegate voting power to user himself
+  await coopToken.delegate(signer.address);
+  // cast the selected vote
+  // @ts-ignore
+  const tx = await coopGovernor.connect(signer).castVote(proposalId, voteKey);
+
+  console.log('TX', tx);
 };

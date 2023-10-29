@@ -1,4 +1,5 @@
 import type { Coop } from '@/types/backend-api';
+import type { FetchedCoop } from '@/types/server/cooperatives';
 import { axios } from './_config';
 
 export const addCoop = async (coop: Coop): Promise<Coop> => {
@@ -11,8 +12,7 @@ export const searchCoop = async (value: string): Promise<Coop[]> => {
   return data;
 };
 
-// todo API
-export const fetchCoop = async (id: string): Promise<Coop> => {
+export const fetchCoop = async (id: string): Promise<FetchedCoop> => {
   const { data } = await axios.get('/coop', { params: { id } });
   return data;
 };

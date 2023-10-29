@@ -45,5 +45,18 @@ export default (app: FastifyInstance) => {
 
         reply.send(res);
       },
-    );
+    )
+
+    .get("/coop", (req: FastifyRequest<{ Querystring: { id: string } }>) => {
+      const { id } = req.query;
+
+      return app.prisma.coop.findUnique({
+        include: {
+          members: true,
+        },
+        where: {
+          id,
+        },
+      });
+    });
 };

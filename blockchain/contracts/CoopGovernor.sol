@@ -15,6 +15,8 @@ contract CoopGovernor is
     GovernorVotes,
     GovernorVotesQuorumFraction
 {
+    event PaymentReceived(address indexed member, uint256 value);
+
     // Ethereum doesn't have a fixed block time,
     // but on average, it's approximately 13-15 seconds per block
     constructor(IVotes _token)
@@ -26,14 +28,12 @@ contract CoopGovernor is
 
     receive() external payable override {
         require(_executor() == address(this), "Governor: must send to executor");
-        // mint vote power after bill payed
-        CoopToken(address(GovernorVotes.token)).mint(msg.sender, 1e18);
+        emit PaymentReceived(msg.sender, msg.value);
     }
 
-    // ? for now anyone can join to any coop
-    // TODO prevent from free connection (add ESCROW? members will accept newbies?)
+    // ! remove join UNNECESSARY
     function join() public {
-        CoopToken(address(GovernorVotes.token)).mint(msg.sender, 1e18);
+        // CoopToken(address(GovernorVotes.token)).mint(msg.sender, 1e18);
     }
 
     // ? the main idea is to hire external services

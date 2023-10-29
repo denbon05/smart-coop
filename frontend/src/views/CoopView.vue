@@ -18,8 +18,8 @@ const sections = [
     linkName: RouteNames.PROPOSAL_HISTORY,
   },
   {
-    sectionName: 'CHAT',
-    linkName: RouteNames.PROPOSAL_HISTORY,
+    sectionName: 'DISCOVER COOP',
+    linkName: RouteNames.COOP_DISCOVER,
   },
 ];
 
@@ -33,12 +33,6 @@ const isPartOfCoopSection = computed(() =>
     )
   )
 );
-
-console.log({
-  isCoopPage: isCoopPage.value,
-  isPartOfCoopSection: isPartOfCoopSection.value,
-  // isPartOfCoopSectionEFF: isPartOfCoopSection.effect,
-});
 </script>
 
 <template>
@@ -66,7 +60,7 @@ console.log({
           </v-col>
 
           <v-col cols="11" md="5">
-            <CoopSection disabled :link-name="RouteNames.COOP_DISCOVER">
+            <CoopSection :link-name="RouteNames.COOP_DISCOVER">
               Discover
             </CoopSection>
           </v-col>

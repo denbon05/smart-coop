@@ -1,11 +1,11 @@
 import {
-  time,
   loadFixture,
+  time,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
-import { VoteKeys } from "./types/governor";
+import { ethers } from "hardhat";
 import { finishElectionPeriod } from "./helpers";
+import { VoteKeys } from "./types/governor";
 
 describe("CoopGovernor", function () {
   const deploy = async () => {
@@ -162,15 +162,46 @@ describe("CoopGovernor", function () {
         };
 
         it("Members should be able to cast votes", async () => {
-          const { s3, coopGovernor, proposalId } = await loadFixture(propose);
+          const { s1, coopGovernor, coopToken, proposalId } = await loadFixture(
+            propose,
+          );
 
           const votingDelay = Number(await coopGovernor.votingDelay());
           await time.increase(votingDelay * 2);
           // can cast vote after time passed
 
+          // console.log(
+          //   "111111111111",
+          //   // await coopGovernor.proposalDeadline(proposalId),
+          //   (await coopGovernor.proposalVotes(proposalId)).forVotes,
+          //   (await coopGovernor.proposalVotes(proposalId)).abstainVotes,
+          //   (await coopGovernor.proposalVotes(proposalId)).againstVotes,
+          //   "s1 balance token: ",
+          //   await coopToken.balanceOf(s1.address),
+          // );
+          // console.log(
+          //   "has voted",
+          //   await coopGovernor.hasVoted(proposalId, s1.address),
+          // );
+
           await expect(
-            coopGovernor.connect(s3).castVote(proposalId, VoteKeys.FOR),
+            coopGovernor.connect(s1).castVote(proposalId, VoteKeys.FOR),
           ).to.emit(coopGovernor, "VoteCast");
+          // coopGovernor.filters.VoteCast;
+          // coopGovernor.filters.Tran;
+
+          // const { forVotes, againstVotes, abstainVotes } =
+          //   await coopGovernor.proposalVotes(proposalId);
+          // console.log(
+          //   "2222222222",
+          //   // await coopGovernor.proposalDeadline(proposalId),
+          //   {
+          //     forVotes,
+          //     forVotesETH: ethers.formatEther(forVotes),
+          //     againstVotes,
+          //     abstainVotes,
+          //   },
+          // );
         });
 
         it("Members should not be able to cast votes after election", async () => {

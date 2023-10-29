@@ -5,7 +5,7 @@
  * quorum=for,abstain means that both For and Abstain votes are counted towards quorum.
  */
 export enum VoteKeys {
-  AGAINST,
-  FOR,
-  ABSTAIN,
+  AGAINST = 0,
+  FOR = 1,
+  ABSTAIN = 2,
 }

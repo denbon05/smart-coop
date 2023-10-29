@@ -8,5 +8,6 @@ export enum RouteNames {
   PROPOSALS = 'proposals',
   COOP_DISCOVER = 'coop-discover',
   PROPOSAL_HISTORY = 'proposal-history',
+  PROPOSAL_DISCOVER = 'proposal-discover',
   ACCOUNT = 'account',
 }

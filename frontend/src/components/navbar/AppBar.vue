@@ -5,8 +5,7 @@ import { useAuth } from '@/composables/auth';
 import AppError from '@/errors/AppError';
 import { SnackbarColor, type ShowSnackbar } from '@/types/components/common';
 import { RouteNames } from '@/types/entities/router';
-import { ref } from 'vue';
-import { computed, inject } from 'vue';
+import { computed, inject, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
 const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
@@ -32,10 +31,12 @@ const connectWallet = async () => {
 
 const isBillTxOn = ref(false);
 
+const amountInEth = '0.2';
+
 const payDueAmount = async () => {
   isBillTxOn.value = true;
   try {
-    await payBill(auth.user.coop.id);
+    await payBill(auth.user.coop.id, amountInEth);
     showSnackbar({ msg: 'Bill payed', color: SnackbarColor.OK });
   } catch (err) {
     console.error(err);
@@ -98,11 +99,14 @@ const defaultPage = computed(() =>
         <section class="d-flex align-center">
           <v-btn
             @click="payDueAmount"
-            class="mx-3"
+            class="mx-3 d-flex align-center"
             variant="outlined"
             rounded="lg"
             :disabled="isBillTxOn"
-            >Pay bill</v-btn
+            >Pay
+            <v-chip class="ml-2 px-2" variant="text" size="small"
+              >{{ amountInEth }} ETH</v-chip
+            ></v-btn
           >
           <RouterLink
             :to="{

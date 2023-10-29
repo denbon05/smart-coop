@@ -1,27 +1,32 @@
 <script setup lang="ts">
-// import { useAuth } from '@/composables/auth';
+import { useAuth } from '@/composables/auth';
+import type { MemberDetails } from '@/types/governor';
 
-// const auth = useAuth();
+const { member } = defineProps<{ member: MemberDetails }>();
+
+const auth = useAuth();
 </script>
 
 <template>
-  <v-row justify="center"
-    ><v-col cols="8">
-      <v-card class="mx-auto" variant="tonal">
-        <v-card-item>
-          <div>
-            <!-- <div class="text-overline mb-1">tonal</div>
-            <div class="text-h6 mb-1">Headline</div>
-            <div class="text-caption">
-              {{ auth.selectedAddress }}
-            </div> -->
-          </div>
-        </v-card-item>
-
-        <v-card-actions>
-          <v-btn> Button </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-col></v-row
-  >
+  <section id="accountDetails">
+    <dl class="my-2">
+      <dt class="text-orange font-weight-bold">Account address</dt>
+      <dd>{{ auth.selectedAddress }}</dd>
+    </dl>
+    <dl class="my-2">
+      <dt class="text-orange font-weight-bold">Location</dt>
+      <dd>{{ auth.user.location }}</dd>
+    </dl>
+    <dl class="my-2">
+      <dt class="text-orange font-weight-bold">Balance</dt>
+      <dd>{{ member.balanceInEth }} ETH</dd>
+    </dl>
+    <dl class="my-2">
+      <dt class="text-orange font-weight-bold">Voting power</dt>
+      <dd class="d-flex align-baseline">
+        {{ member.votingPower }}
+        <v-chip class="mx-2">{{ `${member.votesAmount} vote` }}</v-chip>
+      </dd>
+    </dl>
+  </section>
 </template>

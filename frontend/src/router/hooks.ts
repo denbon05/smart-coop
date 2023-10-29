@@ -6,8 +6,7 @@ const auth = useAuth();
 
 export const isMember = () => !auth.user.isGuest;
 
-export const isGuest = (to: RouteLocationNormalized) => {
-  console.log('isGuest HOOK', to);
+export const isGuest = () => {
   return auth.user.isGuest;
 };
 

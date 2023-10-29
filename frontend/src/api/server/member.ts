@@ -14,7 +14,7 @@ export const fetchMember = async (id: string): Promise<CoopMember | null> => {
   return data;
 };
 
-export const fetchAccounts = async () => {
-  const { data } = await axios.get<Member[]>('/members');
+export const fetchAccounts = async (params: { coopId: string }) => {
+  const { data } = await axios.get<Member[]>('/members', { params });
   return data;
 };

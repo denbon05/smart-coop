@@ -59,7 +59,7 @@ const submit = handleSubmit(async (proposal) => {
 
 const accounts = ref<Member[]>();
 
-fetchAccounts().then((fetchedAccounts) => {
+fetchAccounts({ coopId: auth.user.coopId }).then((fetchedAccounts) => {
   accounts.value = fetchedAccounts;
 });
 </script>
@@ -84,7 +84,7 @@ fetchAccounts().then((fetchedAccounts) => {
             label="Cost of proposal in ETH"
             variant="outlined"
             density="comfortable"
-            class="mb-3"
+            class="mb-3 w-25"
             :initial-value="0"
           ></v-text-field>
         </div>

@@ -26,6 +26,8 @@
     "@mdi/font": "^7.2.96",
     "alchemy-sdk": "^2.10.1",
     "axios": "^0.26.1",
+    "chart.js": "^4.4.0",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "ethers": "^6.7.1",
     "moment": "^2.29.4",
     "vee-validate": "^4.11.8",

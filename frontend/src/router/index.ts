@@ -50,6 +50,13 @@ const router = createRouter({
           name: RouteNames.PROPOSALS,
           path: 'proposals',
           component: () => import('@/components/coop/ProposalList.vue'),
+          children: [
+            {
+              name: RouteNames.PROPOSAL_DISCOVER,
+              path: ':proposalAddress',
+              component: () => import('@/components/coop/DiscoverProposal.vue'),
+            },
+          ],
         },
         {
           name: RouteNames.COOP_DISCOVER,

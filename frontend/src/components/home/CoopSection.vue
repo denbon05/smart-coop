@@ -1,29 +1,23 @@
 <script setup lang="ts">
 import type { RouteNames } from '@/types/entities/router';
-import { useRoute } from 'vue-router';
 
 defineProps<{
   linkName: RouteNames;
-  disabled?: boolean;
 }>();
-
-const route = useRoute();
 </script>
 
 <template>
   <RouterLink
     :to="{
-      name: disabled ? route.name! : linkName,
+      name: linkName,
     }"
     class="text-decoration-none"
-    :disabled="disabled"
   >
-    <v-item :disabled="disabled" v-slot="{ toggle }">
+    <v-item v-slot="{ toggle }">
       <v-card
         color="light-green-accent-2"
         class="d-flex align-center my-2"
         dark
-        :disabled="disabled"
         elevation="2"
         height="230"
         width="400"

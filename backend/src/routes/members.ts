@@ -33,9 +33,18 @@ export default (app: FastifyInstance) => {
       },
     )
 
-    .get("/members", async (req, reply) => {
-      const res = await app.prisma.member.findMany();
+    .get(
+      "/members",
+      async (
+        req: FastifyRequest<{
+          Querystring: { coopId: string };
+        }>,
+      ) => {
+        const { coopId } = req.query;
 
-      reply.send(res);
-    });
+        return app.prisma.member.findMany({
+          where: { coopId },
+        });
+      },
+    );
 };
