@@ -1,6 +1,6 @@
 import type { proposalStateByEnumValue } from '@/utils/governor';
 import type { Member } from '../backend-api';
-import type { EnumValues, ObjectValues } from '@/utils';
+import type { ObjectValues } from '../utils';
 
 export interface IProposal {
   title: string;
@@ -55,6 +55,7 @@ export type FetchedProposal = Omit<IProposal, 'receiver'> & {
   voteStart: string;
   /** Human readable time format */
   voteEnd: string;
+  logData: string;
 } & Votes;
 
 export type HumanProposalState = ObjectValues<typeof proposalStateByEnumValue>;
@@ -85,3 +86,8 @@ export type MemberVotingHistoryItem = {
 };
 
 export type MemberVotingHistory = MemberVotingHistoryItem[];
+
+export type MemberPaymentHistory = {
+  localTime: string;
+  amountInEth: string;
+};

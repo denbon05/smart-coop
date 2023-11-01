@@ -21,7 +21,7 @@ contract CoopGovernor is
     // but on average, it's approximately 13-15 seconds per block
     constructor(IVotes _token)
         Governor("CoopGovernor")
-        GovernorSettings(1 /* 1 block */, 50 /* 10 minutes */, 1e18)
+        GovernorSettings(1 /* 1 block */, 5 /* 1 minutes */, 1e18)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
     {}
@@ -29,11 +29,6 @@ contract CoopGovernor is
     receive() external payable override {
         require(_executor() == address(this), "Governor: must send to executor");
         emit PaymentReceived(msg.sender, msg.value);
-    }
-
-    // ! remove join UNNECESSARY
-    function join() public {
-        // CoopToken(address(GovernorVotes.token)).mint(msg.sender, 1e18);
     }
 
     // ? the main idea is to hire external services

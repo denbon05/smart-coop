@@ -8,8 +8,9 @@ import {
   type HumanProposalState,
   type IProposal,
   type MemberDetails,
-  type ProposalDetails,
+  type MemberPaymentHistory,
   type MemberVotingHistory,
+  type ProposalDetails,
 } from '@/types/governor';
 import {
   formatVoteByKey,
@@ -29,28 +30,14 @@ import {
   parseEther,
   toUtf8Bytes,
 } from 'ethers';
+import moment from 'moment';
 import { fetchAccounts } from '../server';
-
-const getProvider = () => {
-  if (!window.ethereum) {
-    throw new AppError('Connect wallet first');
-  }
-  return new ethers.BrowserProvider(window.ethereum);
-};
-
-const getCurrentSigner = () => {
-  const provider = getProvider();
-  return new ethers.JsonRpcSigner(provider, window.ethereum!.selectedAddress!);
-};
-
-const getCoopGovernor = (address: string) => {
-  const signer = getCurrentSigner();
-  if (!address) {
-    throw new AppError('Governor Contract address is not found!');
-  }
-
-  return new ethers.Contract(address, CoopGovernor.abi, signer);
-};
+import {
+  getBlockTime,
+  getCoopGovernor,
+  getCurrentSigner,
+  getProvider,
+} from './utils';
 
 /**
  * Transfer specific amount to governor contract.
@@ -117,12 +104,6 @@ export const deployGovernor = async () => {
   // governorCoopStorage.setAddress(coopGovernor.target.toString());
   // tokenCoopStorage.setAddress(coopToken.target.toString());
   return coopGovernor.target;
-};
-
-export const joinCoopGovernor = async (governorAddress: string) => {
-  const coopGovernor = getCoopGovernor(governorAddress);
-
-  return coopGovernor.join();
 };
 
 export const makeProposal = async (
@@ -196,6 +177,7 @@ export const fetchProposals = async (
     Promise<FetchedProposal[]>
   >(async (promiseAcc, log) => {
     const acc = await promiseAcc;
+    // console.log('log', log);
     // decode the event log
     const decodedLog = coopGovernor.interface.decodeEventLog(
       proposalCreatedEventFilter.fragment,
@@ -224,7 +206,9 @@ export const fetchProposals = async (
     // start and end properties are not a Proxy
     // `voteStart` and `voteEnd` indexes are 6 and 7
     // of the ProposalCreated event signature
-    const [voteEndUint, voteStartUint] = decodedLog.slice(6, 8);
+    const [voteStartUint, voteEndUint] = decodedLog.slice(6, 8);
+    const finalDateToVote = await getBlockTime(Number(voteEndUint));
+    console.log('!!!!!!!!!!!!!', finalDateToVote);
     const { description, title } =
       parseProposalDescription(descriptionWithTitle);
     // there is only one calldata designed
@@ -252,7 +236,15 @@ export const fetchProposals = async (
     const againstVotes = formatVotingWeightToVotesAmount(againstVotesBigint);
     const abstainVotes = formatVotingWeightToVotesAmount(abstainVotesBigint);
 
-    console.log({ forVotesBigint, forVotes, againstVotes, abstainVotes });
+    console.log({
+      voteEndUint,
+      voteStartUint,
+      eventBlockNum: log.blockNumber,
+    });
+    const voteEndFormatted =
+      proposalStatus === ProposalStatus.HISTORY
+        ? moment(finalDateToVote).format('DD/MM/YY HH:mm')
+        : moment(finalDateToVote).fromNow();
 
     return [
       ...acc,
@@ -270,8 +262,12 @@ export const fetchProposals = async (
         abstainVotes:
           abstainVotes || totalAmountOfVotes - (forVotes + againstVotes),
         // todo format the time
-        voteEnd: voteEndUint,
+        // voteEnd: `${moment(finalDateToVote).fromNow(true)} (${
+        //   Number(voteEndUint) - log.blockNumber
+        // } blocks)`,
+        voteEnd: voteEndFormatted,
         voteStart: voteStartUint,
+        logData: log.data,
       },
     ];
   }, Promise.resolve([]));
@@ -341,7 +337,6 @@ export const fetchMemberVotingHistory = async (
   const coopGovernor = getCoopGovernor(governorAddress);
 
   const voteCastHash = keccak256(
-    // toUtf8Bytes('PaymentReceived(address,uint256)')
     toUtf8Bytes('VoteCast(address,uint256,uint8,uint256,string)')
   );
   const zeroPaddedSignerAddress = ethers.zeroPadValue(signer.address, 32);
@@ -367,7 +362,9 @@ export const fetchMemberVotingHistory = async (
   });
 };
 
-export const fetchMemberPaymentHistory = async (governorAddress: string) => {
+export const fetchMemberPaymentHistory = async (
+  governorAddress: string
+): Promise<MemberPaymentHistory[]> => {
   // TODO limit the searching range
   const fromBlock = '0x0';
   const toBlock = 'latest';
@@ -377,7 +374,6 @@ export const fetchMemberPaymentHistory = async (governorAddress: string) => {
   const coopGovernor = getCoopGovernor(governorAddress);
 
   const paymentHash = keccak256(
-    // toUtf8Bytes('PaymentReceived(address,uint256)')
     toUtf8Bytes('PaymentReceived(address,uint256)')
   );
 
@@ -391,23 +387,24 @@ export const fetchMemberPaymentHistory = async (governorAddress: string) => {
     fromBlock,
     toBlock,
   });
-  console.log('paymentLogs', paymentLogs);
-  console.log('paymentReceivedFilter', paymentReceivedFilter.fragment);
+  // console.log('paymentLogs', paymentLogs);
+  // console.log('paymentReceivedFilter', paymentReceivedFilter.fragment);
 
-  return paymentLogs.map((log) => {
-    // todo compute blockNumber time ago
-    console.log('!!!!!!!! log', log);
-    const decodedLog = coopGovernor.interface.decodeEventLog(
+  // reverse logs in order to have earliest first
+  const paymentPromises = paymentLogs.reverse().map(async (log) => {
+    const date = await getBlockTime(log.blockNumber);
+    const [, amountInWei] = coopGovernor.interface.decodeEventLog(
       paymentReceivedFilter.fragment,
       log.data,
       log.topics
     );
-    console.log('decodedLog', decodedLog);
-    // return {
-    //   proposalId: proposalIdBigint.toString(),
-    //   decision: formatVoteByKey(supportBigint),
-    // };
+    return {
+      localTime: date.toLocaleString(),
+      amountInEth: ethers.formatEther(amountInWei),
+    };
   });
+
+  return Promise.all(paymentPromises);
 };
 
 export const castVote = async ({
@@ -423,7 +420,45 @@ export const castVote = async ({
   await coopToken.delegate(signer.address);
   // cast the selected vote
   // @ts-ignore
-  const tx = await coopGovernor.connect(signer).castVote(proposalId, voteKey);
+  await coopGovernor.connect(signer).castVote(proposalId, voteKey);
+};
 
-  console.log('TX', tx);
+export const executeProposal = async (
+  governorAddress: string,
+  proposal: FetchedProposal
+) => {
+  const coopGovernor = getCoopGovernor(governorAddress);
+
+  // encrypt in the same way as during making proposal
+  const proposalDescription = stringifyProposeDescription(
+    proposal.title,
+    proposal.description
+  );
+  const descriptionHash = keccak256(toUtf8Bytes(proposalDescription));
+
+  const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+  const decodedData = abiCoder.decode(
+    [
+      'uint256',
+      'address',
+      'address[]',
+      'uint256[]',
+      'string[]',
+      'bytes[]',
+      'uint256',
+      'uint256',
+      'string',
+    ],
+    proposal.logData
+  );
+  // 5 is an index of calldatas topic/argument of `ProposalCreated` event
+  const [calldata] = decodedData.at(5);
+
+  const tx = await coopGovernor.execute(
+    [coopGovernor.target],
+    [0],
+    [calldata],
+    descriptionHash
+  );
+  return tx.wait();
 };

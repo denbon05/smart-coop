@@ -33,15 +33,10 @@ onMounted(async () => {
 
 <template>
   <v-row justify="center" align="start"
-    ><v-col cols="10">
+    ><v-col class="d-flex flex-column" md="4">
       <h4 class="text-h4 my-4">{{ auth.user.name }}</h4>
-    </v-col></v-row
-  >
-
-  <v-row justify="center" align="start"
-    ><v-col md="4">
       <AboutMember :member="member" />
     </v-col>
-    <v-col md="6"><ActivityHistory /> </v-col>
+    <v-col md="7"><ActivityHistory /> </v-col>
   </v-row>
 </template>

@@ -1,4 +1,5 @@
 export enum RouteNames {
+  HOME = 'home',
   COOP = 'coop',
   WELCOME = 'welcome',
   AUTH = 'auth',

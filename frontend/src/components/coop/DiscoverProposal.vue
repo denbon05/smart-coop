@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { castVote, fetchProposalDetails } from '@/api/governor/eth-governor';
+import {
+  castVote,
+  executeProposal,
+  fetchProposalDetails,
+} from '@/api/governor/eth-governor';
 import { useAuth } from '@/composables/auth';
 import { useProposal } from '@/composables/proposal';
 import { SnackbarColor, type ShowSnackbar } from '@/types/components/common';
@@ -19,6 +23,8 @@ const auth = useAuth();
 // init default values
 const proposalDetails = reactive<ProposalDetails>({ hasAddressVoted: true });
 const isDetailsLoading = ref(true);
+
+console.log('proposal', proposal);
 
 onBeforeMount(async () => {
   isDetailsLoading.value = true;
@@ -78,7 +84,7 @@ onMounted(() => {
           },
           tooltip: { enabled: false },
         },
-        layout: { padding: { top: 30, bottom: 25 } },
+        layout: { padding: { top: 30, bottom: 20 } },
       },
       plugins: [ChartDataLabels],
     });
@@ -88,10 +94,10 @@ onMounted(() => {
 const humanProposalState: HumanProposalState =
   proposal.state as HumanProposalState;
 
-const isVoteCasting = ref(false);
+const isLoading = ref(false);
 
 const handleCastVote = async (voteKey: VoteKeys) => {
-  isVoteCasting.value = true;
+  isLoading.value = true;
   try {
     await castVote({
       governorAddress: auth.user.coopId,
@@ -106,7 +112,22 @@ const handleCastVote = async (voteKey: VoteKeys) => {
     console.error(err);
     showSnackbar({ msg: 'Failed to cast the vote' });
   }
-  isVoteCasting.value = false;
+  isLoading.value = false;
+};
+
+const execute = async () => {
+  isLoading.value = true;
+  try {
+    await executeProposal(auth.user.coopId, proposal);
+    showSnackbar({ msg: 'Execution is queued', color: SnackbarColor.OK });
+    router.push({
+      name: RouteNames.PROPOSAL_HISTORY,
+    });
+  } catch (err) {
+    console.error(err);
+    showSnackbar({ msg: 'Failed to execute' });
+  }
+  isLoading.value = false;
 };
 </script>
 
@@ -133,7 +154,7 @@ const handleCastVote = async (voteKey: VoteKeys) => {
 
     <v-col cols="1"></v-col>
 
-    <v-col md="4" id="proposalDashboard" class="d-flex flex-column">
+    <v-col md="4" id="proposalDashboard" class="d-flex flex-column px-10">
       <canvas id="proposalChart"></canvas>
 
       <template v-if="!isDetailsLoading">
@@ -145,14 +166,14 @@ const handleCastVote = async (voteKey: VoteKeys) => {
             <h6 class="text-h6 text-center">Your vote</h6>
             <section id="dashActions" class="d-flex justify-center">
               <v-btn
-                :disabled="isDetailsLoading || isVoteCasting"
+                :disabled="isDetailsLoading || isLoading"
                 class="ma-3 btn-long"
                 color="green"
                 @click="handleCastVote(VoteKeys.FOR)"
                 >yes</v-btn
               >
               <v-btn
-                :disabled="isDetailsLoading || isVoteCasting"
+                :disabled="isDetailsLoading || isLoading"
                 class="ma-3 btn-long"
                 color="#FBC400"
                 @click="handleCastVote(VoteKeys.AGAINST)"
@@ -165,6 +186,18 @@ const handleCastVote = async (voteKey: VoteKeys) => {
             You have already voted
           </h4>
         </template>
+
+        <h4
+          v-else-if="proposal.state === 'Succeeded'"
+          class="d-flex justify-center"
+        >
+          <v-btn
+            :disabled="isLoading"
+            @click="execute"
+            class="btn-long btn-sunset text-white"
+            >execute</v-btn
+          >
+        </h4>
 
         <h4 v-else class="text-center text-h4">{{ humanProposalState }}</h4>
       </template>

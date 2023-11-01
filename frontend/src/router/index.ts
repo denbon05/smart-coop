@@ -21,6 +21,7 @@ const router = createRouter({
     // redirect from root path to available to the user
     {
       path: '/',
+      name: RouteNames.HOME,
       redirect: {
         name: auth.user.isGuest ? RouteNames.WELCOME : RouteNames.COOP,
       },
@@ -67,6 +68,13 @@ const router = createRouter({
           name: RouteNames.PROPOSAL_HISTORY,
           path: 'proposal-history',
           component: () => import('@/components/coop/ProposalList.vue'),
+          children: [
+            {
+              name: RouteNames.PROPOSAL_DISCOVER,
+              path: ':proposalAddress',
+              component: () => import('@/components/coop/DiscoverProposal.vue'),
+            },
+          ],
         },
       ],
     },

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { deployGovernor, joinCoopGovernor } from '@/api/governor/eth-governor';
+import { deployGovernor } from '@/api/governor/eth-governor';
 import { addCoop, joinCoop } from '@/api/server';
 import cityBg from '@/assets/images/city-buildings.svg';
 import redMember from '@/assets/images/red-member.svg';
@@ -51,8 +51,6 @@ const createOrJoin = async () => {
         color: SnackbarColor.OK,
       });
     } else {
-      // join to existed smart coop
-      await joinCoopGovernor(auth.user.coop.id);
       // write to db user joined the coop
       const memberData = {
         ...account,
@@ -70,11 +68,9 @@ const createOrJoin = async () => {
         color: SnackbarColor.OK,
       });
     }
-    const defaultPage = auth.user.isGuest
-      ? RouteNames.WELCOME
-      : RouteNames.COOP;
+
     router.push({
-      name: defaultPage,
+      name: RouteNames.HOME,
     });
   } catch (err) {
     showSnackbar({
@@ -110,26 +106,10 @@ const createOrJoin = async () => {
         />
       </v-col>
     </v-row>
-
-    <section class="bg-tech"></section>
   </v-container>
 </template>
 
 <style lang="scss" scoped>
-:root {
-  position: relative;
-  .bg-tech {
-    position: absolute;
-    width: 100%;
-    height: 300px;
-    background-image: url('@/assets/images/bg-electro.svg');
-    background-size: cover;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
-
 .bg-associative {
   width: inherit;
   background-color: transparent;

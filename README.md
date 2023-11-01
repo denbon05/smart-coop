@@ -1,6 +1,6 @@
 # smart-coop
 
-This project can address real-world issues in housing cooperatives by promoting transparency and empowering members to make informed decisions about how their cooperative's funds are allocated.
+This project can address real-world issues in housing cooperatives/associations by promoting transparency and empowering members to make informed decisions about how their associations' funds are allocated.
 
 ## Challenges with coops
 
@@ -26,5 +26,13 @@ This project can address real-world issues in housing cooperatives by promoting 
 
 <b>Prerequisites</b>
 
-1. Local Ethereum blockchain should be launched;
-2. MetaMask must be configured to connect to a local blockchain;
+1. **Local Ethereum blockchain** should be **launched**;
+2. **MetaMask** must be configured to connect to a **local blockchain**;
+3. **Node.js v18** and above;
+4. **Docker v24** and above;
+
+### API
+
+```sh
+make up # launch the app
+```

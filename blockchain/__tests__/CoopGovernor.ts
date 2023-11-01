@@ -37,31 +37,12 @@ describe("CoopGovernor", function () {
     expect(deployerBalance).to.greaterThan(0n);
   });
 
-  it("Should be possible to join smart-coop", async () => {
-    const { s2, coopGovernor, coopToken } = await loadFixture(deploy);
-    await coopGovernor.connect(s2).join();
-    const memberBalance = await coopToken.balanceOf(s2.address);
-    expect(memberBalance).to.greaterThan(0n);
-  });
-
   describe("With members", () => {
     const ethAmount = 0.5;
     const amountDue = ethers.parseEther(ethAmount.toString());
 
-    const joinToCoop = async () => {
-      const { s1, s2, s3, s4, coopGovernor, coopToken } = await loadFixture(
-        deploy,
-      );
-      // add some members
-      await Promise.all(
-        [s2, s3, s4].map((signer) => coopGovernor.connect(signer).join()),
-      );
-
-      return { s1, s2, s3, s4, coopGovernor, coopToken };
-    };
-
     it("Members should be able to pay their bills", async () => {
-      const { s1, s2, s3, coopGovernor } = await loadFixture(joinToCoop);
+      const { s1, s2, s3, coopGovernor } = await loadFixture(deploy);
       const members = [s1, s2, s3];
       // pay bills
       await Promise.all(
@@ -88,7 +69,7 @@ describe("CoopGovernor", function () {
 
       const payBills = async () => {
         const { s1, s2, s3, s4, coopGovernor, coopToken } = await loadFixture(
-          joinToCoop,
+          deploy,
         );
 
         // members pay their bills

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "npx nodemon src/bin/run.ts",
-    "migrate": "npx prisma migrate dev",
+    "migrate:dev": "npx dotenv -e .env.development -- npx prisma migrate dev",
+    "migrate": "npx prisma migrate deploy",
     "test": "npx jest",
     "build": "npx tsc",
     "postinstall": "npx prisma generate"

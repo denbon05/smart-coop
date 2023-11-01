@@ -49,7 +49,7 @@ const selectCoop = (coop: Coop | string) => {
   <v-row justify="end"
     ><v-col cols="11" md="7"
       ><div class="d-flex flex-column">
-        <section color="orange" class="mb-5" id="coopSearch">
+        <section class="mb-5 text-orange font-weight-bold" id="coopSearch">
           Before you join, check if your coop was created
         </section>
         <v-combobox
