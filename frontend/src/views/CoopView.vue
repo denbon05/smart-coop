@@ -42,7 +42,7 @@ const isPartOfCoopSection = computed(() =>
         ><v-row justify="center"
           ><v-col cols="11" md="5">
             <CoopSection :link-name="RouteNames.PROPOSALS">
-              Voting
+              Proposals
             </CoopSection>
           </v-col>
 
@@ -55,7 +55,7 @@ const isPartOfCoopSection = computed(() =>
         <v-row justify="center">
           <v-col cols="11" md="5">
             <CoopSection :link-name="RouteNames.PROPOSAL_HISTORY">
-              Voting history
+              Proposals history
             </CoopSection>
           </v-col>
 

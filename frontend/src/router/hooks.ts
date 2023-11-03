@@ -1,21 +1,19 @@
 import { useAuth } from '@/composables/auth';
 import { RouteNames } from '@/types/entities/router';
-import { type RouteLocationNormalized } from 'vue-router';
+import type { RouteLocationNormalizedLoaded } from 'vue-router';
 
 const auth = useAuth();
 
-export const isMember = () => !auth.user.isGuest;
-
-export const isGuest = () => {
-  return auth.user.isGuest;
-};
-
-export const defineHomePage = (to: RouteLocationNormalized) => {
-  if (to.name === RouteNames.COOP && auth.user.isGuest) {
+export const onlyMember = () => {
+  console.log('onlyMember isGuest', auth.user.isGuest);
+  if (auth.user.isGuest) {
     return { name: RouteNames.WELCOME };
   }
+};
 
-  if (to.name === RouteNames.WELCOME && !auth.user.isGuest) {
+export const onlyGuest = () => {
+  console.log('onlyGuest isGuest', auth.user.isGuest);
+  if (!auth.user.isGuest) {
     return { name: RouteNames.COOP };
   }
 };

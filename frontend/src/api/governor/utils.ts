@@ -29,25 +29,15 @@ export const getBlockTime = async (blockTag: BlockTag = 'latest') => {
   const provider = getProvider();
   return provider.getBlock(blockTag).then((block) => {
     if (!block) {
-      // estimate time for non-existing block
+      // estimate time for non-existing future block
       return provider.getBlock('latest').then((latestBlock) => {
-        const avgTimeInSecondsToMineBlock = 15;
+        const avgMsToMineBlock = 14000;
         // the block of `blockTag` is not mined yet
         const blockDiff = Number(blockTag) - latestBlock!.number;
         // convert to ms
-        const msDiff = blockDiff * avgTimeInSecondsToMineBlock * 1000;
-        return new Date(
-          moment()
-            .add(
-              // adjust to hardhat automine blocks
-              moment.duration(
-                moment()
-                  .subtract(latestBlock!.timestamp * 1000 + msDiff, 'ms')
-                  .valueOf()
-              )
-            )
-            .valueOf()
-        );
+        // `avgMsToMineBlock * 2` include the block where tx will be mined
+        const msDiff = blockDiff * 1000 + avgMsToMineBlock * 2;
+        return new Date(latestBlock!.timestamp * 1000 + msDiff);
       });
     }
     // multiply by 1000 in order to convert seconds to milliseconds

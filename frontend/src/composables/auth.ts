@@ -2,7 +2,33 @@ import { fetchMember } from '@/api/server';
 import Guest from '@/entities/Guest';
 import Member from '@/entities/Member';
 import type { IAuth } from '@/types/composables/auth';
-import { computed, reactive, watch, watchEffect } from 'vue';
+import { ChainHexIds } from '@/types/ethereum';
+import { isArray } from 'lodash';
+import { computed, reactive, watch } from 'vue';
+
+export const refetchMemberData = async (
+  selectedAddress = auth.selectedAddress
+) => {
+  if (selectedAddress) {
+    auth.isLoading = true;
+    // try to fetch user data
+    return fetchMember(selectedAddress)
+      .then((memberData) => {
+        if (memberData) {
+          // existed member
+          auth.user = new Member(memberData);
+        } else {
+          auth.user = new Guest();
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        auth.isLoading = false;
+      });
+  }
+};
 
 // global state
 const eth = computed(() => window.ethereum);
@@ -13,25 +39,17 @@ const auth: IAuth = reactive({
   isLoading: false,
 });
 
-watchEffect(async () => {
-  if (window.ethereum?.selectedAddress) {
-    auth.isLoading = true;
-    // try to fetch user data
-    await fetchMember(window.ethereum.selectedAddress)
-      .then((memberData) => {
-        if (memberData) {
-          // existed member
-          auth.user = new Member(memberData);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        auth.isLoading = false;
-      });
+watch(
+  () => auth.selectedAddress,
+  async (newSelectedAddress, oldSelectedAddress) => {
+    if (newSelectedAddress) {
+      await refetchMemberData(newSelectedAddress);
+      if (newSelectedAddress !== oldSelectedAddress && oldSelectedAddress) {
+        location.reload();
+      }
+    }
   }
-});
+);
 
 export const useAuth = (): IAuth => {
   if (!eth.value) {
@@ -45,3 +63,22 @@ export const useAuth = (): IAuth => {
 
   return auth;
 };
+
+// subscribe to Metamask events
+window.ethereum?.on('chainChanged', (chainHexId: any) => {
+  if (chainHexId !== ChainHexIds.GOERLI || chainHexId !== ChainHexIds.HARDHAT) {
+    console.error(`Unsupported chain id ${chainHexId}`);
+    return;
+  }
+
+  // log out user
+  auth.user = new Guest();
+});
+
+window.ethereum?.on('accountsChanged', async (addresses) => {
+  console.log('accountsChanged', addresses);
+  if (isArray(addresses)) {
+    const [newSelectedAddress] = addresses;
+    auth.selectedAddress = newSelectedAddress;
+  }
+});

@@ -104,10 +104,10 @@ const handleCastVote = async (voteKey: VoteKeys) => {
       proposalId: proposal.id,
       voteKey,
     });
-    showSnackbar({ msg: 'Vote casted successfully', color: SnackbarColor.OK });
-    router.push({
+    await router.push({
       name: RouteNames.PROPOSALS,
     });
+    showSnackbar({ msg: 'Vote casted successfully', color: SnackbarColor.OK });
   } catch (err) {
     console.error(err);
     showSnackbar({ msg: 'Failed to cast the vote' });
@@ -120,7 +120,7 @@ const execute = async () => {
   try {
     await executeProposal(auth.user.coopId, proposal);
     showSnackbar({ msg: 'Execution is queued', color: SnackbarColor.OK });
-    router.push({
+    await router.push({
       name: RouteNames.PROPOSAL_HISTORY,
     });
   } catch (err) {

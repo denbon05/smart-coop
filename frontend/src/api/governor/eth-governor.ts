@@ -39,20 +39,6 @@ import {
   getProvider,
 } from './utils';
 
-/**
- * Transfer specific amount to governor contract.
- * @param address Coop governor address
- * @param dueAmount Amount to pay in ETH
- */
-export const payBill = async (address: string, dueAmount = '0.2') => {
-  const signer = getCurrentSigner();
-  const coopGovernor = getCoopGovernor(address);
-  return signer.sendTransaction({
-    to: coopGovernor.target,
-    value: parseEther(dueAmount),
-  });
-};
-
 const getCoopToken = async (coopGovernor: Contract) => {
   const signer = getCurrentSigner();
   const address = await coopGovernor.token();
@@ -61,6 +47,23 @@ const getCoopToken = async (coopGovernor: Contract) => {
   }
 
   return new ethers.Contract(address, CoopToken.abi, signer);
+};
+
+/**
+ * Transfer specific amount to governor contract.
+ * @param address Coop governor address
+ * @param dueAmount Amount to pay in ETH
+ */
+export const payBill = async (address: string, dueAmount = '0.2') => {
+  const signer = getCurrentSigner();
+  const coopGovernor = getCoopGovernor(address);
+  const coopToken = await getCoopToken(coopGovernor);
+  console.log('11111', signer.address);
+  console.log('AAAAAA', await coopToken.balanceOf(signer.address));
+  return signer.sendTransaction({
+    to: coopGovernor.target,
+    value: parseEther(dueAmount),
+  });
 };
 
 export const deployGovernor = async () => {
@@ -108,20 +111,23 @@ export const deployGovernor = async () => {
 
 export const makeProposal = async (
   governorAddress: string,
-  { title, description, cost: priceInETH, receiver }: IProposal
+  { title, description, cost: priceInETH, receiverAddress }: IProposal
 ) => {
   const coopGovernor = getCoopGovernor(governorAddress);
   const coopToken = await getCoopToken(coopGovernor);
   const signer = getCurrentSigner();
+  console.log('govAdd', governorAddress);
+  console.log('signerAdd', signer.address);
+  console.log('receiverAddress', receiverAddress);
 
   // delegate member voting power to himself
-  await coopToken.delegate(await signer.getAddress());
+  await coopToken.delegate(signer.address);
 
   const priceInWei = parseEther(priceInETH);
   // pay some external service for their services
   const calldata = coopGovernor.interface.encodeFunctionData(
     COOP_HIRE_SERVICE_KEY,
-    [receiver.id, priceInWei]
+    [receiverAddress, priceInWei]
   );
 
   const tx = await coopGovernor.propose(
@@ -208,7 +214,7 @@ export const fetchProposals = async (
     // of the ProposalCreated event signature
     const [voteStartUint, voteEndUint] = decodedLog.slice(6, 8);
     const finalDateToVote = await getBlockTime(Number(voteEndUint));
-    console.log('!!!!!!!!!!!!!', finalDateToVote);
+    // console.log('!!!!!!!!!!!!!', finalDateToVote);
     const { description, title } =
       parseProposalDescription(descriptionWithTitle);
     // there is only one calldata designed
@@ -461,4 +467,11 @@ export const executeProposal = async (
     descriptionHash
   );
   return tx.wait();
+};
+
+export const getVotingPower = async (governorAddress: string) => {
+  const coopGovernor = getCoopGovernor(governorAddress);
+  const signer = getCurrentSigner();
+  // @ts-ignore
+  return coopGovernor.connect(signer).join();
 };

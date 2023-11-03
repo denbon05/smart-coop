@@ -12,8 +12,11 @@
   "author": "denbon05",
   "license": "MIT",
   "scripts": {
-    "test": "npx hardhat test",
-    "node": "npx hardhat node"
+    "test": "NODE_ENV=test npx hardhat test",
+    "prenode": "npm run compile",
+    "node": "npx hardhat node",
+    "precompile": "npx hardhat clean",
+    "compile": "npx hardhat compile"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.8.0"

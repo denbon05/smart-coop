@@ -3,7 +3,8 @@ import type { CoopAccount, MemberAccount } from '@/entities/Account';
 
 const props = defineProps<{
   account: CoopAccount | MemberAccount;
-  isCoop: boolean;
+  isLoading: boolean;
+  isCoop?: boolean;
 }>();
 
 const preTitle = props.isCoop ? 'Coop' : 'Member';
@@ -39,12 +40,14 @@ const emit = defineEmits(['next', 'cancel']);
           @click="emit('next')"
           class="my-2 btn-long font-weight-bold"
           variant="outlined"
+          :disabled="isLoading"
           color="secondary-darken-1"
           >Submit</v-btn
         >
         <v-btn
           @click="emit('cancel')"
           class="my-2 btn-long font-weight-bold"
+          :disabled="isLoading"
           variant="outlined"
           color="orange"
           >Cancel</v-btn

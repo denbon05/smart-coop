@@ -55,7 +55,7 @@ const discoverProposal = (selectedProposal: FetchedProposal) => {
   <template v-if="shouldFetchProposals">
     <v-row v-if="proposals.length"
       ><v-col>
-        <v-table density="comfortable" fixed-header height="400">
+        <table id="proposalTable" density="comfortable" fixed-header>
           <thead id="proposalTHead" class="bg-green-darken-3" :elevation="2">
             <tr>
               <th class="text-left text-white w-50 text-subtitle-1">
@@ -67,10 +67,13 @@ const discoverProposal = (selectedProposal: FetchedProposal) => {
               <th class="text-right text-white text-subtitle-1">END TIME</th>
             </tr>
           </thead>
-          <div class="my-3"></div>
+          <div class="my-4"></div>
           <tbody>
             <tr v-for="proposal in proposals" :key="proposal.id">
-              <td @click="discoverProposal(proposal)" class="cursor-pointer">
+              <td
+                @click="discoverProposal(proposal)"
+                class="cursor-pointer text-decoration-underline"
+              >
                 {{ proposal.title }}
               </td>
               <td align="center">{{ proposal.forVotes }}</td>
@@ -79,7 +82,7 @@ const discoverProposal = (selectedProposal: FetchedProposal) => {
               <td align="right">{{ proposal.voteEnd }}</td>
             </tr>
           </tbody>
-        </v-table>
+        </table>
       </v-col></v-row
     >
     <h4 v-else class="text-center pa-5">There are no available proposals</h4>
@@ -89,7 +92,32 @@ const discoverProposal = (selectedProposal: FetchedProposal) => {
 </template>
 
 <style lang="scss" scoped>
+// #proposalTHead {
+//   background-color: green !important;
+//   box-shadow: 0 0px 5px rgba(18, 18, 18, 0.598);
+// }
+
+// #proposalTHead::before {
+//   content: '' !important;
+//   display: table !important;
+//   background-color: lightblue !important;
+//   width: 100% !important; /* Set the desired width */
+//   position: absolute !important;
+//   top: 0 !important;
+//   left: 0 !important;
+//   z-index: -1 !important;
+// }
+
 #proposalTHead {
-  box-shadow: 0 0px 5px rgba(18, 18, 18, 0.598);
+  border-radius: 5px !important;
+  box-shadow: 0 1px 5px rgba(18, 18, 18, 0.598);
+  th {
+    padding: 10px 15px;
+  }
+}
+
+#proposalTable {
+  width: 100%;
+  border-collapse: collapse;
 }
 </style>

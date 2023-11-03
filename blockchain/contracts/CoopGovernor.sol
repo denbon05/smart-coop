@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "./CoopToken.sol";
 
+import "hardhat/console.sol";
+
 contract CoopGovernor is
     Governor,
     GovernorSettings,
@@ -29,6 +31,14 @@ contract CoopGovernor is
     receive() external payable override {
         require(_executor() == address(this), "Governor: must send to executor");
         emit PaymentReceived(msg.sender, msg.value);
+    }
+
+    function join() external {
+        require(
+            CoopToken(address(token)).balanceOf(msg.sender) == 0,
+            "You already joined the coop"
+        );
+        CoopToken(address(token)).mint(msg.sender, 1e18);
     }
 
     // ? the main idea is to hire external services

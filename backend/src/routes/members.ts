@@ -19,10 +19,13 @@ export default (app: FastifyInstance) => {
 
     .get(
       "/member",
-      async (req: FastifyRequest<{ Params: { id: Member["id"] } }>, reply) => {
+      async (
+        req: FastifyRequest<{ Querystring: { id: Member["id"] } }>,
+        reply,
+      ) => {
         const res = await app.prisma.member.findFirst({
           where: {
-            id: req.params.id,
+            id: req.query.id,
           },
           include: {
             coop: true,

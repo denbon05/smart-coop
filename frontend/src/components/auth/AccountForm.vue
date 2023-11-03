@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { useAuth } from '@/composables/auth';
 import type { CoopAccount, MemberAccount } from '@/entities/Account';
 import { useField, useForm } from 'vee-validate';
 
 const emit = defineEmits<{
-  next: [accountData: MemberAccount | CoopAccount];
+  save: [accountData: MemberAccount | CoopAccount];
 }>();
-
 const props = defineProps<{
-  isCoop: boolean;
+  isCoop?: boolean;
 }>();
 
-const { handleSubmit } = useForm<CoopAccount | MemberAccount>({
+const { handleSubmit } = useForm<CoopAccount | Omit<MemberAccount, 'coopId'>>({
   validationSchema: {
     name(value: string) {
       if (value?.length >= 3) return true;
@@ -30,18 +28,15 @@ const name = useField<string>('name');
 const location = useField<string>('location');
 
 const submit = handleSubmit((accountData) => {
-  emit('next', accountData);
+  emit('save', accountData);
 });
-
-const auth = useAuth();
-const title = props.isCoop
-  ? 'Creating a COOP'
-  : `Creating member of COOP "${auth.user.coop.name}"`;
 </script>
 
 <template>
-  <section id="accountFormContainer">
-    <h3 class="text-h4 w-100 text-center mb-7">{{ title }}</h3>
+  <section class="account-form">
+    <h3 class="text-h4 w-100 text-center mb-7">
+      <slot name="title"> Creating a COOP </slot>
+    </h3>
 
     <v-sheet elevation="2" rounded="lg" class="pa-4">
       <form @submit.prevent="submit" class="px-10 py-4">
@@ -49,7 +44,7 @@ const title = props.isCoop
           <v-text-field
             v-model="name.value.value"
             :error-messages="name.errorMessage.value"
-            label="Name"
+            :label="`${isCoop ? 'Coop' : 'Your'} name`"
             class="mt-1"
             autofocus
             variant="underlined"
@@ -58,7 +53,7 @@ const title = props.isCoop
           <v-text-field
             v-model="location.value.value"
             :error-messages="location.errorMessage.value"
-            label="Location"
+            :label="`${isCoop ? 'Coop' : 'Your'} location`"
             class="mt-1"
             variant="underlined"
           ></v-text-field>
@@ -72,7 +67,7 @@ const title = props.isCoop
             type="submit"
             color="green"
           >
-            to the last step
+            <slot name="action-text"> to the last step </slot>
           </v-btn>
         </div>
       </form>

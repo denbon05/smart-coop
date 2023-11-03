@@ -1,11 +1,10 @@
-import { AccountType } from '@/types/entities/account';
+import { useAuth } from '@/composables/auth';
 import { RouteNames } from '@/types/entities/router';
 import { createRouter, createWebHistory } from 'vue-router';
 import CoopView from '../views/CoopView.vue';
 import NotFound from '../views/NotFound.vue';
 import WelcomeView from '../views/WelcomeView.vue';
-import { defineHomePage, isGuest, isMember } from './hooks';
-import { useAuth } from '@/composables/auth';
+import { onlyGuest, onlyMember } from './hooks';
 
 const auth = useAuth();
 
@@ -32,7 +31,7 @@ const router = createRouter({
       path: '/welcome',
       name: RouteNames.WELCOME,
       component: WelcomeView,
-      beforeEnter: [defineHomePage, isGuest],
+      beforeEnter: [onlyGuest],
     },
 
     // home page for member of the coop
@@ -40,7 +39,8 @@ const router = createRouter({
       path: '/coop',
       name: RouteNames.COOP,
       component: CoopView,
-      beforeEnter: [defineHomePage, isMember],
+      beforeEnter: [onlyMember],
+      meta: { requiresAuth: true },
       children: [
         {
           name: RouteNames.NEW_PROPOSAL,
@@ -83,19 +83,17 @@ const router = createRouter({
     {
       path: '/auth',
       name: RouteNames.AUTH,
-      beforeEnter: [isGuest],
+      beforeEnter: [onlyGuest],
       children: [
         {
-          path: 'coop',
+          path: 'new-coop',
           name: RouteNames.AUTH_COOP,
-          props: { accountType: AccountType.COOP },
-          component: () => import('../views/AuthView.vue'),
+          component: () => import('../views/AuthCoop.vue'),
         },
         {
-          path: 'coop',
+          path: 'new-member',
           name: RouteNames.JOIN_COOP,
-          props: { accountType: AccountType.MEMBER },
-          component: () => import('../views/AuthView.vue'),
+          component: () => import('../views/AuthMember.vue'),
         },
       ],
     },
@@ -105,7 +103,8 @@ const router = createRouter({
       path: '/member',
       name: RouteNames.ACCOUNT,
       component: () => import('../views/MemberView.vue'),
-      beforeEnter: [isMember],
+      beforeEnter: [onlyMember],
+      meta: { requiresAuth: true },
     },
   ],
 });

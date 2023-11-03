@@ -20,19 +20,30 @@ This project can address real-world issues in housing cooperatives/associations 
 5. Define a priority of a proposal;
 6. Transparency dashboard;
 
-## Dev-mode
+## Dev
 
 ### Local
 
 <b>Prerequisites</b>
 
-1. **Local Ethereum blockchain** should be **launched**;
-2. **MetaMask** must be configured to connect to a **local blockchain**;
-3. **Node.js v18** and above;
-4. **Docker v24** and above;
+1. **MetaMask** must be configured to connect to a **local blockchain**;
+2. **Node.js ^v18**;
+3. **Docker ^v24**;
 
 ### API
 
 ```sh
 make up # launch the app
 ```
+
+### Things to improve:
+
+- [ ] Styling.
+- [ ] Write tests for frontend.
+- [ ] Write tests for backend.
+- [ ] Add more tests for Governor contract.
+- [ ] Limit user payments per specific period.
+- [ ] Add GUI to keep track of user payments.
+- [ ] Add members’ exploration.
+- [ ] Add chat per coop.
+- [ ] Implement news/blog feed.

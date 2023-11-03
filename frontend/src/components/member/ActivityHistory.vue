@@ -35,7 +35,7 @@ onMounted(async () => {
 </script>
 
 <template id="memberPaymentHistory">
-  <div class="text-start text-orange font-weight-bold">Voting history</div>
+  <div class="text-start text-orange font-weight-bold pt-5">Voting history</div>
   <section>
     <v-table density="compact" height="200" fixed-header>
       <thead>

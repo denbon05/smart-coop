@@ -27,10 +27,9 @@ const { handleSubmit } = useForm<IProposal>({
 
       return 'Insufficient amount.';
     },
-    receiver(value: Member) {
-      // // 42 is a length of valid hexadecimal address
-      // if (value?.length === 42) return true;
-      return value || 'Required';
+    receiverAddress(value: string) {
+      // 42 is a length of valid hexadecimal address
+      return value?.length === 42 || 'Required a valid Ethereum address';
     },
   },
 });
@@ -38,23 +37,26 @@ const { handleSubmit } = useForm<IProposal>({
 const title = useField<string>('title');
 const description = useField<string>('description');
 const cost = useField<number>('cost');
-const receiver = useField<Member>('receiver');
+const receiverAddress = useField<Member>('receiverAddress');
 
 const showSnackbar = inject<ShowSnackbar>('showSnack', () => null);
 const auth = useAuth();
 const router = useRouter();
+const isLoading = ref(false);
 
 const submit = handleSubmit(async (proposal) => {
+  isLoading.value = true;
   try {
     await makeProposal(auth.user.coopId, proposal);
     showSnackbar({ msg: 'Proposal created', color: SnackbarColor.OK });
-    router.push({
+    await router.push({
       name: RouteNames.PROPOSALS,
     });
   } catch (err) {
     console.error(err);
     showSnackbar({ msg: 'Failed to make a proposal' });
   }
+  isLoading.value = true;
 });
 
 const accounts = ref<Member[]>();
@@ -100,15 +102,16 @@ fetchAccounts({ coopId: auth.user.coopId }).then((fetchedAccounts) => {
           no-resize
         ></v-textarea>
 
-        <v-combobox
-          label="Executor"
-          v-model="receiver.value.value"
-          :error-messages="receiver.errorMessage.value"
+        <v-text-field
+          label="Executor address"
+          v-model="receiverAddress.value.value"
+          :error-messages="receiverAddress.errorMessage.value"
           :items="accounts"
+          density="comfortable"
           item-title="name"
           item-value="id"
           variant="outlined"
-        ></v-combobox>
+        ></v-text-field>
       </form>
     </v-col>
 
@@ -117,6 +120,7 @@ fetchAccounts({ coopId: auth.user.coopId }).then((fetchedAccounts) => {
         <v-btn
           size="large"
           rounded="lg"
+          :disabled="isLoading"
           @click="submit"
           class="btn-sunset text-white btn-big"
         >

@@ -1,12 +1,11 @@
 import type { proposalStateByEnumValue } from '@/utils/governor';
-import type { Member } from '../backend-api';
 import type { ObjectValues } from '../utils';
 
 export interface IProposal {
   title: string;
   description: string;
   cost: string;
-  receiver: Member;
+  receiverAddress: string;
 }
 
 export enum ProposalState {

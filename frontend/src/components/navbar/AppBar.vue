@@ -36,7 +36,7 @@ const amountInEth = '0.2';
 const payDueAmount = async () => {
   isBillTxOn.value = true;
   try {
-    await payBill(auth.user.coop.id, amountInEth);
+    await payBill(auth.user.coopId, amountInEth);
     showSnackbar({ msg: 'Bill payed', color: SnackbarColor.OK });
   } catch (err) {
     console.error(err);
