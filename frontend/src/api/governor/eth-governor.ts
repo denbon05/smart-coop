@@ -121,7 +121,8 @@ export const makeProposal = async (
   console.log('receiverAddress', receiverAddress);
 
   // delegate member voting power to himself
-  await coopToken.delegate(signer.address);
+  const delegateTx = await coopToken.delegate(signer.address);
+  await delegateTx.wait();
 
   const priceInWei = parseEther(priceInETH);
   // pay some external service for their services
