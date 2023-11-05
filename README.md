@@ -1,5 +1,11 @@
 # smart-coop
 
+<!-- <a
+href="ipfs://bafybeiaat5wer3wcjq6wpx3ilgysjiwky2uouu6hg2flyiet246iumvb3u"
+target="_blank">demo (90 seconds)</a> -->
+
+<a href="https://bafybeifz6sf3tgtli6nmpiz7q36qmi5hrl6j6if7hfdzwspw3odqqnlwqi.ipfs.w3s.link/smart-coop-fast-review.mp4" target="_blank">demo (90 seconds)</a>
+
 This project can address real-world issues in housing cooperatives/associations by promoting transparency and empowering members to make informed decisions about how their associations' funds are allocated.
 
 ## Challenges with coops
